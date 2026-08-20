@@ -1,201 +1,406 @@
-                                 Apache License
-                           Version 2.0, January 2004
-                        http://www.apache.org/licenses/
+# YO-LE-ZZ COMMUNITY LICENSE v1.0
 
-   TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
+**Copyright © 2026 yo-le-zz. All rights reserved.**
 
-   1. Definitions.
+This license applies to the software, source code, documentation, assets, and other materials distributed with a copy of this license, unless a separate license is explicitly provided for a particular component.
 
-      "License" shall mean the terms and conditions for use, reproduction,
-      and distribution as defined by Sections 1 through 9 of this document.
+---
 
-      "Licensor" shall mean the copyright owner or entity authorized by
-      the copyright owner that is granting the License.
+## 1. Definitions
 
-      "Legal Entity" shall mean the union of the acting entity and all
-      other entities that control, are controlled by, or are under common
-      control with that entity. For the purposes of this definition,
-      "control" means (i) the power, direct or indirect, to cause the
-      direction or management of such entity, whether by contract or
-      otherwise, or (ii) ownership of fifty percent (50%) or more of the
-      outstanding shares, or (iii) beneficial ownership of such entity.
+For the purposes of this license:
 
-      "You" (or "Your") shall mean an individual or Legal Entity
-      exercising permissions granted by this License.
+### 1.1 "Software"
 
-      "Source" form shall mean the preferred form for making modifications,
-      including but not limited to software source code, documentation
-      source, and configuration files.
+"Software" means the source code, executable code, documentation, configuration files, scripts, assets, models, prompts, and other materials distributed by the copyright holder under this license.
 
-      "Object" form shall mean any form resulting from mechanical
-      transformation or translation of a Source form, including but
-      not limited to compiled object code, generated documentation,
-      and conversions to other media types.
+### 1.2 "Original Software"
 
-      "Work" shall mean the work of authorship, whether in Source or
-      Object form, made available under the License, as indicated by a
-      copyright notice that is included in or attached to the work
-      (an example is provided in the Appendix below).
+"Original Software" means the Software as distributed by **yo-le-zz**, without modifications made by another person or organization.
 
-      "Derivative Works" shall mean any work, whether in Source or Object
-      form, that is based on (or derived from) the Work and for which the
-      editorial revisions, annotations, elaborations, or other modifications
-      represent, as a whole, an original work of authorship. For the purposes
-      of this License, Derivative Works shall not include works that remain
-      separable from, or merely link (or bind by name) to the interfaces of,
-      the Work and Derivative Works thereof.
+### 1.3 "Modified Version"
 
-      "Contribution" shall mean any work of authorship, including
-      the original version of the Work and any modifications or additions
-      to that Work or Derivative Works thereof, that is intentionally
-      submitted to Licensor for inclusion in the Work by the copyright owner
-      or by an individual or Legal Entity authorized to submit on behalf of
-      the copyright owner. For the purposes of this definition, "submitted"
-      means any form of electronic, verbal, or written communication sent
-      to the Licensor or its representatives, including but not limited to
-      communication on electronic mailing lists, source code control systems,
-      and issue tracking systems that are managed by, or on behalf of, the
-      Licensor for the purpose of discussing and improving the Work, but
-      excluding communication that is conspicuously marked or otherwise
-      designated in writing by the copyright owner as "Not a Contribution."
+"Modified Version" means any copy, fork, derivative work, or other version of the Software in which one or more files, functions, algorithms, configurations, assets, dependencies, documentation, or other components have been added, removed, replaced, or altered.
 
-      "Contributor" shall mean Licensor and any individual or Legal Entity
-      on behalf of whom a Contribution has been received by Licensor and
-      subsequently incorporated within the Work.
+A change made solely to local configuration, environment variables, personal settings, or other data that is not part of the Software itself does not, by itself, constitute a Modified Version.
 
-   2. Grant of Copyright License. Subject to the terms and conditions of
-      this License, each Contributor hereby grants to You a perpetual,
-      worldwide, non-exclusive, no-charge, royalty-free, irrevocable
-      copyright license to reproduce, prepare Derivative Works of,
-      publicly display, publicly perform, sublicense, and distribute the
-      Work and such Derivative Works in Source or Object form.
+### 1.4 "Redistribute"
 
-   3. Grant of Patent License. Subject to the terms and conditions of
-      this License, each Contributor hereby grants to You a perpetual,
-      worldwide, non-exclusive, no-charge, royalty-free, irrevocable
-      (except as stated in this section) patent license to make, have made,
-      use, offer to sell, sell, import, and otherwise transfer the Work,
-      where such license applies only to those patent claims licensable
-      by such Contributor that are necessarily infringed by their
-      Contribution(s) alone or by combination of their Contribution(s)
-      with the Work to which such Contribution(s) was submitted. If You
-      institute patent litigation against any entity (including a
-      cross-claim or counterclaim in a lawsuit) alleging that the Work
-      or a Contribution incorporated within the Work constitutes direct
-      or contributory patent infringement, then any patent licenses
-      granted to You under this License for that Work shall terminate
-      as of the date such litigation is filed.
+"Redistribute" means to provide, publish, transmit, upload, mirror, share, sublicense, or otherwise make the Software available to another person or organization.
 
-   4. Redistribution. You may reproduce and distribute copies of the
-      Work or Derivative Works thereof in any medium, with or without
-      modifications, and in Source or Object form, provided that You
-      meet the following conditions:
+This includes, without limitation:
 
-      (a) You must give any other recipients of the Work or
-          Derivative Works a copy of this License; and
+* Git repositories;
+* GitHub, GitLab, Codeberg, Bitbucket, or similar services;
+* downloadable archives;
+* package repositories;
+* websites;
+* forums;
+* file-sharing services;
+* physical media;
+* application bundles;
+* container images;
+* compiled binaries;
+* and peer-to-peer distribution.
 
-      (b) You must cause any modified files to carry prominent notices
-          stating that You changed the files; and
+### 1.5 "Commercial Use"
 
-      (c) You must retain, in the Source form of any Derivative Works
-          that You distribute, all copyright, patent, trademark, and
-          attribution notices from the Source form of the Work,
-          excluding those notices that do not pertain to any part of
-          the Derivative Works; and
+"Commercial Use" means any use primarily intended to obtain money, revenue, financial compensation, commercial advantage, or other monetary benefit directly from the Software or a Modified Version.
 
-      (d) If the Work includes a "NOTICE" text file as part of its
-          distribution, then any Derivative Works that You distribute must
-          include a readable copy of the attribution notices contained
-          within such NOTICE file, excluding those notices that do not
-          pertain to any part of the Derivative Works, in at least one
-          of the following places: within a NOTICE text file distributed
-          as part of the Derivative Works; within the Source form or
-          documentation, if provided along with the Derivative Works; or,
-          within a display generated by the Derivative Works, if and
-          wherever such third-party notices normally appear. The contents
-          of the NOTICE file are for informational purposes only and
-          do not modify the License. You may add Your own attribution
-          notices within Derivative Works that You distribute, alongside
-          or as an addendum to the NOTICE text from the Work, provided
-          that such additional attribution notices cannot be construed
-          as modifying the License.
+Commercial Use includes, without limitation:
 
-      You may add Your own copyright statement to Your modifications and
-      may provide additional or different license terms and conditions
-      for use, reproduction, or distribution of Your modifications, or
-      for any such Derivative Works as a whole, provided Your use,
-      reproduction, and distribution of the Work otherwise complies with
-      the conditions stated in this License.
+* selling the Software;
+* selling a Modified Version;
+* renting or leasing the Software;
+* charging a license fee;
+* charging for access to the Software;
+* paywalling the Software;
+* selling downloads of the Software;
+* selling access to a repository containing the Software;
+* bundling the Software into a product where payment is principally for access to the Software;
+* offering the Software itself as a paid service;
+* offering a hosted version of the Software where the Software is the principal product or service;
+* using the Software as the principal component of a paid service;
+* or otherwise monetizing the Software itself.
 
-   5. Submission of Contributions. Unless You explicitly state otherwise,
-      any Contribution intentionally submitted for inclusion in the Work
-      by You to the Licensor shall be under the terms and conditions of
-      this License, without any additional terms or conditions.
-      Notwithstanding the above, nothing herein shall supersede or modify
-      the terms of any separate license agreement you may have executed
-      with Licensor regarding such Contributions.
+Commercial Use does **not** automatically include every use performed by a business or organization. Internal use by an organization is permitted provided that the organization does not violate the other restrictions of this license.
 
-   6. Trademarks. This License does not grant permission to use the trade
-      names, trademarks, service marks, or product names of the Licensor,
-      except as required for reasonable and customary use in describing the
-      origin of the Work and reproducing the content of the NOTICE file.
+### 1.6 "Modification Notice"
 
-   7. Disclaimer of Warranty. Unless required by applicable law or
-      agreed to in writing, Licensor provides the Work (and each
-      Contributor provides its Contributions) on an "AS IS" BASIS,
-      WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
-      implied, including, without limitation, any warranties or conditions
-      of TITLE, NON-INFRINGEMENT, MERCHANTABILITY, or FITNESS FOR A
-      PARTICULAR PURPOSE. You are solely responsible for determining the
-      appropriateness of using or redistributing the Work and assume any
-      risks associated with Your exercise of permissions under this License.
+A "Modification Notice" is a clear statement identifying that the distributed version has been modified from the Original Software.
 
-   8. Limitation of Liability. In no event and under no legal theory,
-      whether in tort (including negligence), contract, or otherwise,
-      unless required by applicable law (such as deliberate and grossly
-      negligent acts) or agreed to in writing, shall any Contributor be
-      liable to You for damages, including any direct, indirect, special,
-      incidental, or consequential damages of any character arising as a
-      result of this License or out of the use or inability to use the
-      Work (including but not limited to damages for loss of goodwill,
-      work stoppage, computer failure or malfunction, or any and all
-      other commercial damages or losses), even if such Contributor
-      has been advised of the possibility of such damages.
+The notice must:
 
-   9. Accepting Warranty or Additional Liability. While redistributing
-      the Work or Derivative Works thereof, You may choose to offer,
-      and charge a fee for, acceptance of support, warranty, indemnity,
-      or other liability obligations and/or rights consistent with this
-      License. However, in accepting such obligations, You may act only
-      on Your own behalf and on Your sole responsibility, not on behalf
-      of any other Contributor, and only if You agree to indemnify,
-      defend, and hold each Contributor harmless for any liability
-      incurred by, or claims asserted against, such Contributor by reason
-      of your accepting any such warranty or additional liability.
+1. state that the Software has been modified;
+2. identify the person or organization responsible for the modifications, unless they choose to remain anonymous where legally permitted;
+3. provide a reasonably clear description of the modifications;
+4. identify the approximate date of the modifications; and
+5. remain reasonably visible to users of the Modified Version.
 
-   END OF TERMS AND CONDITIONS
+---
 
-   APPENDIX: How to apply the Apache License to your work.
+# 2. Copyright
 
-      To apply the Apache License to your work, attach the following
-      boilerplate notice, with the fields enclosed by brackets "[]"
-      replaced with your own identifying information. (Don't include
-      the brackets!)  The text should be enclosed in the appropriate
-      comment syntax for the file format. We also recommend that a
-      file or class name and description of purpose be included on the
-      same "printed page" as the copyright notice for easier
-      identification within third-party archives.
+The Software is copyrighted.
 
-   Copyright [yyyy] [name of copyright owner]
+Copyright ownership is not transferred by this license.
 
-   Licensed under the Apache License, Version 2.0 (the "License");
-   you may not use this file except in compliance with the License.
-   You may obtain a copy of the License at
+All rights not expressly granted by this license remain with **yo-le-zz** and the respective copyright holders of third-party components.
 
-       http://www.apache.org/licenses/LICENSE-2.0
+---
 
-   Unless required by applicable law or agreed to in writing, software
-   distributed under the License is distributed on an "AS IS" BASIS,
-   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-   See the License for the specific language governing permissions and
-   limitations under the License.
+# 3. Grant of Rights
+
+Subject to the conditions and restrictions of this license, yo-le-zz grants you a worldwide, non-exclusive, royalty-free, non-transferable license to:
+
+### 3.1 Use
+
+Use the Software for personal, educational, research, testing, development, and internal organizational purposes.
+
+### 3.2 Copy
+
+Make copies of the Software for permitted purposes.
+
+### 3.3 Modify
+
+Modify the Software for personal, educational, research, testing, development, and internal organizational purposes.
+
+### 3.4 Fork
+
+Create and maintain forks of the Software.
+
+### 3.5 Redistribute
+
+Redistribute the Original Software or a Modified Version, provided that all requirements of Section 5 are satisfied and the redistribution is not Commercial Use.
+
+---
+
+# 4. Private Modifications
+
+You may modify the Software for your own use without publishing, disclosing, or distributing those modifications.
+
+You are not required to provide the source code or Modification Notice for modifications that remain entirely private and are never redistributed.
+
+Private modifications do not constitute a violation of this license merely because they differ from the Original Software.
+
+---
+
+# 5. Redistribution Requirements
+
+If you redistribute the Software, whether in source or compiled form, you must comply with all requirements in this section.
+
+## 5.1 Same License
+
+The Software and any Modified Version must be distributed under this license.
+
+You may not replace, remove, weaken, or override this license for the Software.
+
+## 5.2 Copyright Notice
+
+You must retain:
+
+* the original copyright notice;
+* attribution to yo-le-zz;
+* this license;
+* and any existing notices required by third-party licenses.
+
+You may add additional copyright notices for your own modifications, but you may not remove or obscure the original copyright notice.
+
+## 5.3 Modification Notice
+
+If you redistribute a Modified Version, you must provide a Modification Notice.
+
+The notice must be sufficiently clear that a reasonable recipient can distinguish the Modified Version from the Original Software.
+
+For example:
+
+> This version is a modified version of Cosmya by yo-le-zz.
+> Modifications were made by Example Developer in August 2026.
+> Changes include: redesigned audit engine, additional Rust analysis, and new reporting features.
+
+## 5.4 No Misrepresentation
+
+You may not represent a Modified Version as the Original Software.
+
+You may not falsely claim that yo-le-zz created, approved, endorsed, maintains, or supports your Modified Version.
+
+The name "Cosmya" may not be used in a manner that reasonably implies official endorsement by yo-le-zz unless explicit permission has been granted.
+
+## 5.5 License Availability
+
+A copy of this license must accompany every redistribution of the Software or Modified Version.
+
+For online distributions, the license must be included in the repository, package, archive, or another location reasonably accessible to recipients.
+
+---
+
+# 6. Prohibition of Commercial Distribution
+
+You may not sell, license for payment, rent, lease, or otherwise commercially distribute the Software or a Modified Version.
+
+In particular, you may not:
+
+1. sell a copy of the Software;
+2. sell a Modified Version;
+3. charge a download fee;
+4. charge a license fee;
+5. place the Software behind a paid download;
+6. place the Software behind a subscription where payment is required to obtain the Software;
+7. sell access to a repository containing the Software;
+8. sell a fork of the Software;
+9. sell binaries compiled from the Software;
+10. sell source code derived from the Software;
+11. sell substantially equivalent versions derived from the Software;
+12. offer paid technical access where the Software itself is the principal item being provided;
+13. use a paywall or payment requirement to obtain the Software;
+14. sublicense the Software for monetary compensation; or
+15. otherwise monetize the Software itself.
+
+---
+
+# 7. Free Redistribution
+
+Redistribution must be free of charge with respect to the Software.
+
+You may not require payment, subscription, donation, membership, cryptocurrency transfer, advertising interaction, or other financial compensation as a condition for receiving the Software.
+
+This does not prohibit unrelated voluntary donations to a project, organization, or individual, provided that the donation is not a condition for receiving the Software.
+
+---
+
+# 8. Larger Works and Products
+
+You may incorporate the Software into a larger work for permitted purposes, provided that:
+
+1. the Software remains subject to this license;
+2. this license is included with the distribution;
+3. the Original Software copyright notices are preserved;
+4. any Modified Version of the Software complies with Section 5;
+5. the Software itself is not sold as a separate product;
+6. the incorporation does not circumvent the Commercial Use restrictions of this license.
+
+This license does not automatically apply to independent code that is not derived from the Software.
+
+However, you may not separate, repackage, rename, or reorganize the Software for the purpose of avoiding the restrictions of this license.
+
+---
+
+# 9. Services and Hosted Deployments
+
+You may operate the Software privately for development, research, testing, experimentation, or internal organizational purposes.
+
+You may not offer the Software itself as a paid hosted service, SaaS product, API, or other commercial service where the Software constitutes the principal functionality being sold.
+
+Using the Software internally as one component of an independent commercial operation is not automatically prohibited, provided that the Software itself is not being sold, licensed, or commercially distributed and no other provision of this license is violated.
+
+---
+
+# 10. Forks
+
+Forks are permitted for non-commercial purposes.
+
+A fork must:
+
+* retain this license;
+* retain the original copyright notice;
+* clearly identify itself as a fork or modified version when it differs from the Original Software;
+* provide a Modification Notice when redistributed;
+* not falsely imply official affiliation with yo-le-zz;
+* not use the name "Cosmya" in a way that implies official status without permission.
+
+A fork may have its own project name.
+
+---
+
+# 11. Names and Trademarks
+
+This license does not grant permission to use trademarks, logos, service marks, project names, or branding belonging to yo-le-zz.
+
+The name **Cosmya** may not be used to imply that a Modified Version is an official release, official fork, certified version, or endorsed product of yo-le-zz without explicit permission.
+
+This restriction does not prevent factual statements such as:
+
+> "A fork of Cosmya by yo-le-zz."
+
+---
+
+# 12. Third-Party Components
+
+The Software may contain or depend upon components distributed under separate licenses.
+
+Those components remain subject to their respective licenses.
+
+Nothing in this license overrides a third-party license where that license grants rights that cannot legally be restricted by this license.
+
+You are responsible for complying with all applicable third-party license requirements when redistributing the Software.
+
+---
+
+# 13. No Additional Restrictions
+
+You may not impose additional legal or technical restrictions on recipients' rights under this license.
+
+In particular, you may not:
+
+* add a new license that removes rights granted by this license;
+* require payment from recipients;
+* add DRM specifically intended to prevent permitted use;
+* prevent recipients from obtaining the source code when the source code is otherwise being redistributed;
+* or impose terms that contradict this license.
+
+---
+
+# 14. Security Research and Testing
+
+This license permits security research, vulnerability analysis, testing, reverse engineering, and experimentation performed for lawful purposes.
+
+Nothing in this license grants permission to use the Software for unlawful activity.
+
+---
+
+# 15. No Warranty
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED.
+
+TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, YO-LE-ZZ DISCLAIMS ALL WARRANTIES, INCLUDING BUT NOT LIMITED TO WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE, TITLE, AND NON-INFRINGEMENT.
+
+---
+
+# 16. Limitation of Liability
+
+TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW, YO-LE-ZZ SHALL NOT BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, EXEMPLARY, OR OTHER DAMAGES ARISING FROM OR RELATED TO THE SOFTWARE OR ITS USE.
+
+---
+
+# 17. Termination
+
+Your rights under this license terminate automatically if you materially violate its terms.
+
+Upon termination, you must cease the activities that are no longer permitted by this license.
+
+Termination does not automatically terminate rights already granted to recipients who received the Software lawfully and remain in compliance with this license.
+
+---
+
+# 18. Restoration of Rights
+
+If your rights have terminated because of a violation, your rights may be restored at the sole discretion of yo-le-zz.
+
+Restoration may be granted explicitly in writing.
+
+A correction of an accidental or minor violation does not automatically constitute restoration unless yo-le-zz confirms restoration is required or appropriate.
+
+---
+
+# 19. Contributions
+
+Unless explicitly agreed otherwise in writing, contributions submitted to the project are provided under the same license as the portion of the project to which they are contributed.
+
+By submitting a contribution, you represent that you have the legal right to submit it under these terms.
+
+---
+
+# 20. No Patent Grant
+
+This license does not grant any patent rights except to the limited extent that such rights are necessarily implied by the permissions expressly granted above.
+
+---
+
+# 21. Assignment
+
+You may not transfer or sublicense your rights under this license to another person or organization for commercial purposes.
+
+You may provide lawful copies of the Software to other persons in accordance with this license.
+
+---
+
+# 22. Interpretation
+
+If any provision of this license is found to be invalid or unenforceable, that provision shall be interpreted to the maximum extent permitted by law, and the remaining provisions shall remain in effect.
+
+Failure by yo-le-zz to enforce a provision of this license does not constitute a permanent waiver of that provision.
+
+---
+
+# 23. License Version
+
+This license is **YO-LE-ZZ COMMUNITY LICENSE v1.0**.
+
+Future versions may contain different terms.
+
+Unless explicitly stated otherwise, Software distributed under version 1.0 remains governed by version 1.0.
+
+---
+
+# 24. Summary of Permissions
+
+| Action                                                     | Allowed |
+| ---------------------------------------------------------- | ------- |
+| Personal use                                               | ✅       |
+| Educational use                                            | ✅       |
+| Research                                                   | ✅       |
+| Private modification                                       | ✅       |
+| Private fork                                               | ✅       |
+| Internal organizational use                                | ✅       |
+| Free redistribution                                        | ✅       |
+| Free redistribution of modifications                       | ✅       |
+| Commercial sale of Software                                | ❌       |
+| Commercial sale of Modified Version                        | ❌       |
+| Paid SaaS primarily providing the Software                 | ❌       |
+| Paid download                                              | ❌       |
+| Paid license                                               | ❌       |
+| Removing copyright notices                                 | ❌       |
+| Changing the license for the Software                      | ❌       |
+| Redistributing modifications without a modification notice | ❌       |
+| Claiming a fork is official                                | ❌       |
+| Adding additional restrictions                             | ❌       |
+
+---
+
+# 25. Short Form
+
+**You may use, study, modify, fork, and freely redistribute this Software, including modified versions, provided that you keep this license and the original attribution, clearly disclose modifications when redistributing them, and do not sell, commercially license, or otherwise monetize the Software itself. Private modifications do not need to be published.**
+
+---
+
+**Copyright © 2026 yo-le-zz. All rights reserved.**
