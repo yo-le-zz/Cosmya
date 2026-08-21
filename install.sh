@@ -95,7 +95,12 @@ fi
 # 7. Install
 # --------------------------------------------------------------------------
 log "Installing $DEB_FILENAME (requires root)..."
-$SUDO apt-get install -y "$WORKDIR/$DEB_FILENAME" \
+# --reinstall matters here: Cosmya may publish a new .deb under an
+# unchanged version string during pre-1.0 development (e.g. a same-version
+# bugfix rebuild). Without --reinstall, apt sees a matching version already
+# installed, silently no-ops ("already the newest version"), and the freshly
+# downloaded fix never actually gets installed.
+$SUDO apt-get install --reinstall -y "$WORKDIR/$DEB_FILENAME" \
     || $SUDO dpkg -i "$WORKDIR/$DEB_FILENAME" \
     || fail "Installation failed."
 
