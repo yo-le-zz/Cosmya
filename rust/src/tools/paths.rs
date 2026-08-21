@@ -80,7 +80,9 @@ pub fn resolve_safe_path(root: &Path, relative: &str) -> Result<PathBuf, PathSan
     for component in requested.components() {
         match component {
             Component::ParentDir => {
-                return Err(PathSandboxError::ParentTraversalRejected(relative.to_string()))
+                return Err(PathSandboxError::ParentTraversalRejected(
+                    relative.to_string(),
+                ))
             }
             Component::Prefix(_) | Component::RootDir => {
                 return Err(PathSandboxError::AbsolutePathRejected(relative.to_string()))

@@ -119,7 +119,10 @@ pub struct TreeResult {
 }
 
 pub fn tree(root: &Path, path: &str, max_depth: Option<usize>) -> TreeResult {
-    let depth = max_depth.unwrap_or(DEFAULT_TREE_DEPTH).min(MAX_TREE_DEPTH).max(1);
+    let depth = max_depth
+        .unwrap_or(DEFAULT_TREE_DEPTH)
+        .min(MAX_TREE_DEPTH)
+        .max(1);
 
     let resolved = match resolve_safe_path(root, path) {
         Ok(p) => p,
@@ -137,7 +140,14 @@ pub fn tree(root: &Path, path: &str, max_depth: Option<usize>) -> TreeResult {
     let mut output = String::new();
     let mut node_count = 0usize;
     let mut truncated = false;
-    build_tree_lines(&resolved, 0, depth, &mut output, &mut node_count, &mut truncated);
+    build_tree_lines(
+        &resolved,
+        0,
+        depth,
+        &mut output,
+        &mut node_count,
+        &mut truncated,
+    );
 
     TreeResult {
         success: true,
@@ -180,7 +190,14 @@ fn build_tree_lines(
         if file_type.is_dir() {
             out.push_str(&format!("{indent}{name}/\n"));
             *node_count += 1;
-            build_tree_lines(&entry.path(), current_depth + 1, max_depth, out, node_count, truncated);
+            build_tree_lines(
+                &entry.path(),
+                current_depth + 1,
+                max_depth,
+                out,
+                node_count,
+                truncated,
+            );
         } else {
             out.push_str(&format!("{indent}{name}\n"));
             *node_count += 1;
@@ -260,9 +277,7 @@ pub fn read_file(root: &Path, path: &str) -> ReadFileResult {
             content: None,
             truncated: false,
             is_binary: true,
-            error: Some(
-                "File appears to be binary and was not read as text.".to_string(),
-            ),
+            error: Some("File appears to be binary and was not read as text.".to_string()),
         };
     }
 

@@ -10,9 +10,17 @@ fn make_project() -> tempfile::TempDir {
         "password = get_password()\nAPI_KEY = 'sk-hardcoded-secret'\n",
     )
     .unwrap();
-    fs::write(dir.path().join("src/util.py"), "def helper():\n    return 1\n").unwrap();
+    fs::write(
+        dir.path().join("src/util.py"),
+        "def helper():\n    return 1\n",
+    )
+    .unwrap();
     fs::create_dir_all(dir.path().join("tests")).unwrap();
-    fs::write(dir.path().join("tests/test_util.py"), "def test_helper():\n    pass\n").unwrap();
+    fs::write(
+        dir.path().join("tests/test_util.py"),
+        "def test_helper():\n    pass\n",
+    )
+    .unwrap();
     dir
 }
 
@@ -30,11 +38,7 @@ fn search_text_finds_matches_with_line_numbers() {
 fn search_text_respects_max_results() {
     let project = make_project();
     for i in 0..20 {
-        fs::write(
-            project.path().join(format!("file_{i}.txt")),
-            "needle\n",
-        )
-        .unwrap();
+        fs::write(project.path().join(format!("file_{i}.txt")), "needle\n").unwrap();
     }
     let result = search_text(project.path(), "needle", ".", Some(5));
     assert!(result.success);

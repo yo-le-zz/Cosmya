@@ -43,21 +43,30 @@ fn allows_root_itself_via_dot() {
 fn rejects_absolute_path() {
     let project = make_project();
     let result = resolve_safe_path(project.path(), "/etc/passwd");
-    assert!(matches!(result, Err(PathSandboxError::AbsolutePathRejected(_))));
+    assert!(matches!(
+        result,
+        Err(PathSandboxError::AbsolutePathRejected(_))
+    ));
 }
 
 #[test]
 fn rejects_simple_parent_traversal() {
     let project = make_project();
     let result = resolve_safe_path(project.path(), "../secret.txt");
-    assert!(matches!(result, Err(PathSandboxError::ParentTraversalRejected(_))));
+    assert!(matches!(
+        result,
+        Err(PathSandboxError::ParentTraversalRejected(_))
+    ));
 }
 
 #[test]
 fn rejects_deep_parent_traversal() {
     let project = make_project();
     let result = resolve_safe_path(project.path(), "../../../../etc/passwd");
-    assert!(matches!(result, Err(PathSandboxError::ParentTraversalRejected(_))));
+    assert!(matches!(
+        result,
+        Err(PathSandboxError::ParentTraversalRejected(_))
+    ));
 }
 
 #[test]
@@ -67,7 +76,10 @@ fn rejects_traversal_hidden_mid_path() {
     // rejected by the syntactic pre-check, without ever touching the
     // filesystem for the escaping portion.
     let result = resolve_safe_path(project.path(), "src/../../outside");
-    assert!(matches!(result, Err(PathSandboxError::ParentTraversalRejected(_))));
+    assert!(matches!(
+        result,
+        Err(PathSandboxError::ParentTraversalRejected(_))
+    ));
 }
 
 #[test]
@@ -108,7 +120,10 @@ fn rejects_symlinked_directory_escaping_project_root() {
 
     // Even a path *through* the symlinked directory must be rejected.
     let result = resolve_safe_path(project.path(), "linked_dir/data.txt");
-    assert!(matches!(result, Err(PathSandboxError::EscapesProjectRoot(_))));
+    assert!(matches!(
+        result,
+        Err(PathSandboxError::EscapesProjectRoot(_))
+    ));
 }
 
 #[test]

@@ -107,7 +107,9 @@ pub fn search_text(
         // already proved is inside the sandbox, re-verify every visited
         // entry never escapes root (guards against a symlinked directory
         // encountered mid-walk).
-        let Ok(canonical_entry) = entry.path().canonicalize() else { continue };
+        let Ok(canonical_entry) = entry.path().canonicalize() else {
+            continue;
+        };
         if !canonical_entry.starts_with(&canonical_root) {
             continue;
         }
@@ -116,7 +118,9 @@ pub fn search_text(
         }
         files_scanned += 1;
 
-        let Ok(bytes) = std::fs::read(entry.path()) else { continue };
+        let Ok(bytes) = std::fs::read(entry.path()) else {
+            continue;
+        };
         if bytes.len() as u64 > MAX_SEARCH_FILE_BYTES {
             continue;
         }
@@ -234,7 +238,9 @@ pub fn search_files(
             break;
         }
         let Ok(entry) = entry else { continue };
-        let Ok(canonical_entry) = entry.path().canonicalize() else { continue };
+        let Ok(canonical_entry) = entry.path().canonicalize() else {
+            continue;
+        };
         if !canonical_entry.starts_with(&canonical_root) {
             continue;
         }
