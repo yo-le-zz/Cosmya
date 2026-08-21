@@ -1,0 +1,30 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  python-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v3
+      - run: uv venv --python 3.12 .venv
+      - run: |
+          . .venv/bin/activate
+          uv pip install -e . --group dev
+          python -m pytest tests/python/ -q
+
+  rust-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - working-directory: rust
+        run: cargo test --release
+      - working-directory: rust
+        run: cargo fmt --check
+      - working-directory: rust
+        run: cargo clippy --all-targets -- -D warnings

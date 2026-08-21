@@ -1,0 +1,17 @@
+Package: cosmya
+Version: __VERSION__
+Section: devel
+Priority: optional
+Architecture: amd64
+Maintainer: yolezz <https://github.com/yo-le-zz>
+Installed-Size: __INSTALLED_SIZE__
+Depends: python3 (>= 3.11)
+Description: AI-powered, read-only code auditor
+ Cosmya analyzes a codebase with the help of a large language model and
+ reports security vulnerabilities, bugs, architectural weaknesses, and
+ other meaningful issues. Cosmya never modifies the audited project; it
+ is a strictly read-only, terminal-only inspection tool.
+ .
+ Supports OpenAI, Google Gemini, Anthropic Claude, and local Ollama models,
+ with a Rust-backed, sandboxed filesystem inspection engine.
+Homepage: https://cosmya.pages.dev/

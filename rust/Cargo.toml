@@ -1,0 +1,43 @@
+[package]
+name = "cosmya-native"
+version = "0.1.0"
+edition = "2021"
+authors = ["yolezz"]
+description = "Sandboxed, read-only filesystem inspection tools for Cosmya, exposed to Python via PyO3."
+# A plain string, not `license-file`: `license-file` must resolve to a path
+# *inside* this crate's own root (rust/), but Cosmya's LICENSE lives at the
+# repository root one level up, which both Cargo and maturin reject. This
+# custom, non-SPDX license string is fine since the crate is never
+# published to crates.io (publish = false below) -- the actual LICENSE
+# file at the repo root remains the authoritative copy.
+license = "YO-LE-ZZ COMMUNITY LICENSE v1.0"
+publish = false
+
+[lib]
+# "cosmya_native" is the Rust crate/rlib name (used by `cargo test`).
+# The Python-importable module name (`cosmya._native`) is configured
+# separately via [tool.maturin] in the top-level pyproject.toml.
+name = "cosmya_native"
+crate-type = ["cdylib", "rlib"]
+
+[dev-dependencies]
+tempfile = "3.10"
+
+[dependencies]
+# 0.22 caps out at Python 3.13; 0.29 adds support for newer CPython
+# releases (incl. 3.14). build.sh also pins PYO3_PYTHON to a known-good
+# interpreter so this doesn't depend on whatever `python3` resolves to
+# on a given machine.
+pyo3 = { version = "0.29", features = ["extension-module"] }
+walkdir = "2.5"
+ignore = "0.4"
+globset = "0.4"
+regex = "1.10"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+pythonize = "0.29"
+
+[profile.release]
+lto = true
+codegen-units = 1
+strip = true

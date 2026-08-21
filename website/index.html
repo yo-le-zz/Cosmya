@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html class="dark" lang="fr">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Cosmya — Audit de code par IA, en lecture seule</title>
+<meta name="description" content="Cosmya analyse votre code avec un modèle d'IA et détecte failles de sécurité, bugs et faiblesses d'architecture — sans jamais modifier votre projet."/>
+<link rel="icon" type="image/png" href="./assets/logo.png"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@600;700&amp;family=Inter:wght@400;500;600&amp;family=JetBrains+Mono:wght@500&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+    tailwind.config = {
+        darkMode: "class",
+        theme: {
+            extend: {
+                colors: {
+                    "surface-bright": "#f8f9ff",
+                    "error": "#ba1a1a",
+                    "tertiary-container": "#727577",
+                    "on-error": "#ffffff",
+                    "error-container": "#ffdad6",
+                    "on-background": "#0b1c30",
+                    "surface-container-low": "#eff4ff",
+                    "inverse-on-surface": "#eaf1ff",
+                    "tertiary": "#595c5e",
+                    "outline-variant": "#c7c4d7",
+                    "surface-dim": "#cbdbf5",
+                    "on-secondary": "#ffffff",
+                    "inverse-primary": "#c0c1ff",
+                    "surface-container": "#e5eeff",
+                    "surface-container-high": "#dce9ff",
+                    "primary": "#4648d4",
+                    "on-surface": "#0b1c30",
+                    "on-primary-fixed": "#07006c",
+                    "background": "#f8f9ff",
+                    "surface-container-highest": "#d3e4fe",
+                    "inverse-surface": "#213145",
+                    "outline": "#767586",
+                    "on-secondary-fixed-variant": "#3f465c",
+                    "on-secondary-fixed": "#131b2e",
+                    "surface-variant": "#d3e4fe",
+                    "on-primary-container": "#fffbff",
+                    "on-tertiary": "#ffffff",
+                    "on-primary": "#ffffff",
+                    "primary-container": "#6063ee",
+                    "primary-fixed-dim": "#c0c1ff",
+                    "on-error-container": "#93000a",
+                    "secondary": "#565e74",
+                    "on-surface-variant": "#464554",
+                    "surface-container-lowest": "#ffffff",
+                    "secondary-container": "#dae2fd",
+                    "primary-fixed": "#e1e0ff",
+                    "on-primary-fixed-variant": "#2f2ebe",
+                    "secondary-fixed-dim": "#bec6e0",
+                    "secondary-fixed": "#dae2fd",
+                    "surface": "#f8f9ff"
+                },
+                borderRadius: { "DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px" },
+                spacing: { "stack-md": "24px", "stack-sm": "12px", "section-gap": "80px", "container-max": "1200px", "gutter": "24px" },
+                fontFamily: {
+                    "label-caps": ["Inter"], "body-base": ["Inter"], "headline-md": ["Hanken Grotesk"],
+                    "body-sm": ["Inter"], "display-lg-mobile": ["Hanken Grotesk"],
+                    "code-snippet": ["JetBrains Mono"], "display-lg": ["Hanken Grotesk"]
+                },
+                fontSize: {
+                    "label-caps": ["12px", { lineHeight: "16px", letterSpacing: "0.05em", fontWeight: "600" }],
+                    "body-base": ["16px", { lineHeight: "24px", fontWeight: "400" }],
+                    "headline-md": ["24px", { lineHeight: "32px", fontWeight: "600" }],
+                    "body-sm": ["14px", { lineHeight: "20px", fontWeight: "400" }],
+                    "display-lg-mobile": ["32px", { lineHeight: "40px", letterSpacing: "-0.02em", fontWeight: "700" }],
+                    "code-snippet": ["14px", { lineHeight: "20px", fontWeight: "500" }],
+                    "display-lg": ["48px", { lineHeight: "56px", letterSpacing: "-0.02em", fontWeight: "700" }]
+                }
+            }
+        }
+    }
+</script>
+<style>
+    .fade-in-up { opacity: 0; transform: translateY(20px); animation: fadeInUp 0.6s ease-out forwards; }
+    @keyframes fadeInUp { to { opacity: 1; transform: translateY(0); } }
+    .delay-100 { animation-delay: 100ms; } .delay-200 { animation-delay: 200ms; }
+    .delay-300 { animation-delay: 300ms; } .delay-400 { animation-delay: 400ms; }
+    html { scroll-behavior: smooth; }
+    /* Keep horizontal scroll on code blocks usable but invisible -- the
+       default browser scrollbar clashed visually with the terminal card. */
+    .no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
+    .no-scrollbar::-webkit-scrollbar { display: none; height: 0; }
+    .nav-link { padding-bottom: 4px; border-bottom: 2px solid transparent; }
+    .nav-link.active { color: #4648d4; border-bottom-color: #4648d4; }
+    .dark .nav-link.active { color: #c0c1ff; border-bottom-color: #c0c1ff; }
+</style>
+</head>
+<body class="bg-background text-on-background dark:bg-on-background dark:text-surface-bright min-h-screen flex flex-col font-body-base transition-colors duration-300">
+
+<header class="w-full top-0 sticky bg-surface-bright dark:bg-on-background border-b border-outline-variant dark:border-on-secondary-fixed-variant transition-colors duration-300 z-50">
+<div class="flex justify-between items-center max-w-container-max mx-auto px-gutter py-4">
+<a href="#top" class="flex items-center gap-3">
+<img alt="Logo Cosmya" class="w-8 h-8 rounded-DEFAULT" src="./assets/logo.png"/>
+<span class="font-headline-md text-headline-md font-bold text-on-background dark:text-surface-bright">Cosmya</span>
+</a>
+<nav class="hidden md:flex items-center gap-6">
+<a class="nav-link text-secondary dark:text-secondary-fixed-dim hover:text-primary dark:hover:text-primary-fixed transition-colors duration-300" href="#fonctionnalites" data-section="fonctionnalites">Fonctionnalités</a>
+<a class="nav-link text-secondary dark:text-secondary-fixed-dim hover:text-primary dark:hover:text-primary-fixed transition-colors duration-300" href="#architecture" data-section="architecture">Architecture</a>
+<a class="nav-link text-secondary dark:text-secondary-fixed-dim hover:text-primary dark:hover:text-primary-fixed transition-colors duration-300" href="#securite" data-section="securite">Sécurité</a>
+<a class="nav-link text-secondary dark:text-secondary-fixed-dim hover:text-primary dark:hover:text-primary-fixed transition-colors duration-300" href="#installation" data-section="installation">Installation</a>
+<a class="text-secondary dark:text-secondary-fixed-dim hover:text-primary dark:hover:text-primary-fixed transition-colors duration-300" href="https://github.com/yo-le-zz/Cosmya" target="_blank" rel="noopener">GitHub</a>
+</nav>
+<button aria-label="Basculer le mode sombre" class="p-2 rounded-full hover:bg-surface-container dark:hover:bg-inverse-surface transition-colors duration-300 text-primary dark:text-primary-fixed flex items-center justify-center" id="theme-toggle">
+<span class="material-symbols-outlined dark:hidden">dark_mode</span>
+<span class="material-symbols-outlined hidden dark:block">light_mode</span>
+</button>
+</div>
+</header>
+
+<main id="top" class="flex-grow flex flex-col items-center px-gutter relative">
+<div class="absolute inset-0 z-[-1] opacity-5 pointer-events-none" style="background-image: radial-gradient(circle at 2px 2px, currentColor 1px, transparent 0); background-size: 32px 32px;"></div>
+
+<!-- HERO -->
+<section class="max-w-[800px] w-full text-center space-y-stack-md pt-section-gap pb-16">
+<div class="fade-in-up">
+<h1 class="font-display-lg-mobile md:font-display-lg text-display-lg-mobile md:text-display-lg text-on-background dark:text-surface-bright mb-stack-md">
+    Un auditeur de code IA, strictement en lecture seule
+</h1>
+<p class="font-body-base text-body-base text-secondary dark:text-secondary-fixed-dim max-w-[620px] mx-auto">
+    Cosmya explore votre projet avec un modèle d'IA et détecte failles de sécurité, bugs, erreurs
+    logiques et faiblesses d'architecture. Il n'écrit, ne supprime et n'exécute jamais rien dans
+    votre code.
+</p>
+</div>
+
+<div class="fade-in-up delay-200">
+<div class="bg-slate-900 rounded-lg shadow-lg border border-slate-700/50 overflow-hidden relative text-left">
+<div class="flex items-center px-4 py-3 border-b border-slate-700/50 bg-slate-800/50">
+<div class="flex space-x-2">
+<div class="w-3 h-3 rounded-full bg-red-500/80"></div>
+<div class="w-3 h-3 rounded-full bg-yellow-500/80"></div>
+<div class="w-3 h-3 rounded-full bg-green-500/80"></div>
+</div>
+<span class="ml-4 font-code-snippet text-code-snippet text-slate-400">install.sh</span>
+</div>
+<div class="p-6 relative group">
+<pre class="font-code-snippet text-code-snippet text-slate-300 overflow-x-auto no-scrollbar pr-16"><span class="text-emerald-400">$</span> curl -fsSL https://raw.githubusercontent.com/yo-le-zz/Cosmya/main/install.sh | bash</pre>
+<button aria-label="Copier la commande" class="absolute top-1/2 -translate-y-1/2 right-4 opacity-0 group-hover:opacity-100 transition-opacity bg-slate-700 hover:bg-slate-600 text-white rounded p-2 flex items-center justify-center focus:outline-none" id="copy-button">
+<span class="material-symbols-outlined text-[20px]">content_copy</span>
+</button>
+</div>
+</div>
+<div class="mt-4 inline-flex items-center gap-2 bg-surface-container-high dark:bg-inverse-surface text-primary dark:text-primary-fixed px-4 py-2 rounded-full opacity-0 transition-opacity duration-300" id="copy-toast">
+<span class="material-symbols-outlined text-[18px]">check_circle</span>
+<span class="font-body-sm text-body-sm">Commande copiée !</span>
+</div>
+</div>
+
+<div class="fade-in-up delay-300 flex flex-wrap justify-center gap-3">
+<a href="https://github.com/yo-le-zz/Cosmya/releases" target="_blank" rel="noopener"
+   class="inline-flex items-center gap-2 px-5 py-3 rounded-lg bg-primary text-on-primary font-medium hover:bg-primary-container transition-colors">
+<span class="material-symbols-outlined text-[20px]">download</span>
+Télécharger le .deb
+</a>
+<a href="https://github.com/yo-le-zz/Cosmya" target="_blank" rel="noopener"
+   class="inline-flex items-center gap-2 px-5 py-3 rounded-lg border border-outline-variant dark:border-on-secondary-fixed-variant text-on-background dark:text-surface-bright font-medium hover:bg-surface-container dark:hover:bg-inverse-surface transition-colors">
+<span class="material-symbols-outlined text-[20px]">code</span>
+Voir le code source
+</a>
+</div>
+
+<div class="fade-in-up delay-400 flex flex-wrap justify-center gap-stack-md pt-stack-md border-t border-outline-variant dark:border-on-secondary-fixed-variant">
+<div class="flex items-center gap-2 text-secondary dark:text-secondary-fixed-dim">
+<span class="material-symbols-outlined text-[18px]">info</span>
+<span class="font-body-sm text-body-sm">Version : 0.1.0</span>
+</div>
+<div class="flex items-center gap-2 text-secondary dark:text-secondary-fixed-dim">
+<span class="material-symbols-outlined text-[18px]">gavel</span>
+<span class="font-body-sm text-body-sm">Licence : YO-LE-ZZ COMMUNITY LICENSE v1.0</span>
+</div>
+<div class="flex items-center gap-2 text-secondary dark:text-secondary-fixed-dim">
+<span class="material-symbols-outlined text-[18px]">terminal</span>
+<span class="font-body-sm text-body-sm">Linux x86_64 uniquement</span>
+</div>
+</div>
+</section>
+
+<!-- FEATURES -->
+<section id="fonctionnalites" class="max-w-container-max w-full py-16 border-t border-outline-variant dark:border-on-secondary-fixed-variant">
+<h2 class="font-headline-md text-headline-md text-center mb-10">Ce que fait Cosmya</h2>
+<div class="grid md:grid-cols-3 gap-6">
+
+<div class="p-6 rounded-xl border border-outline-variant dark:border-on-secondary-fixed-variant bg-surface-container-low dark:bg-inverse-surface/20">
+<span class="material-symbols-outlined text-primary dark:text-primary-fixed text-[28px] mb-3 block">security</span>
+<h3 class="font-headline-md text-[18px] font-semibold mb-2">Analyse de sécurité</h3>
+<p class="text-body-sm text-secondary dark:text-secondary-fixed-dim">Vulnérabilités, bugs, erreurs logiques, faiblesses d'architecture, problèmes de performance et de fiabilité, mauvaises pratiques.</p>
+</div>
+
+<div class="p-6 rounded-xl border border-outline-variant dark:border-on-secondary-fixed-variant bg-surface-container-low dark:bg-inverse-surface/20">
+<span class="material-symbols-outlined text-primary dark:text-primary-fixed text-[28px] mb-3 block">lock</span>
+<h3 class="font-headline-md text-[18px] font-semibold mb-2">Lecture seule, toujours</h3>
+<p class="text-body-sm text-secondary dark:text-secondary-fixed-dim">Aucun outil d'écriture, de suppression ou d'exécution n'existe dans Cosmya. Votre projet n'est jamais modifié.</p>
+</div>
+
+<div class="p-6 rounded-xl border border-outline-variant dark:border-on-secondary-fixed-variant bg-surface-container-low dark:bg-inverse-surface/20">
+<span class="material-symbols-outlined text-primary dark:text-primary-fixed text-[28px] mb-3 block">hub</span>
+<h3 class="font-headline-md text-[18px] font-semibold mb-2">4 fournisseurs d'IA</h3>
+<p class="text-body-sm text-secondary dark:text-secondary-fixed-dim">OpenAI, Google Gemini, Anthropic Claude, et Ollama en local — avec découverte automatique des modèles disponibles.</p>
+</div>
+
+<div class="p-6 rounded-xl border border-outline-variant dark:border-on-secondary-fixed-variant bg-surface-container-low dark:bg-inverse-surface/20">
+<span class="material-symbols-outlined text-primary dark:text-primary-fixed text-[28px] mb-3 block">key</span>
+<h3 class="font-headline-md text-[18px] font-semibold mb-2">Identifiants chiffrés</h3>
+<p class="text-body-sm text-secondary dark:text-secondary-fixed-dim">Clés API protégées par Argon2id + AES-256-GCM. Votre mot de passe n'est jamais stocké.</p>
+</div>
+
+<div class="p-6 rounded-xl border border-outline-variant dark:border-on-secondary-fixed-variant bg-surface-container-low dark:bg-inverse-surface/20">
+<span class="material-symbols-outlined text-primary dark:text-primary-fixed text-[28px] mb-3 block">terminal</span>
+<h3 class="font-headline-md text-[18px] font-semibold mb-2">100% terminal</h3>
+<p class="text-body-sm text-secondary dark:text-secondary-fixed-dim">Une interface CLI soignée construite avec Typer et Rich. Pas d'interface web, pas d'application graphique.</p>
+</div>
+
+<div class="p-6 rounded-xl border border-outline-variant dark:border-on-secondary-fixed-variant bg-surface-container-low dark:bg-inverse-surface/20">
+<span class="material-symbols-outlined text-primary dark:text-primary-fixed text-[28px] mb-3 block">block</span>
+<h3 class="font-headline-md text-[18px] font-semibold mb-2">Pas de shell générique</h3>
+<p class="text-body-sm text-secondary dark:text-secondary-fixed-dim">L'IA ne dispose que de six outils d'inspection prédéfinis et validés. Aucune commande arbitraire n'est possible.</p>
+</div>
+
+</div>
+</section>
+
+<!-- ARCHITECTURE -->
+<section id="architecture" class="max-w-container-max w-full py-16 border-t border-outline-variant dark:border-on-secondary-fixed-variant">
+<h2 class="font-headline-md text-headline-md text-center mb-4">Architecture Python + Rust</h2>
+<p class="text-body-sm text-secondary dark:text-secondary-fixed-dim text-center max-w-[640px] mx-auto mb-10">
+Python orchestre la CLI, les fournisseurs d'IA, la boucle d'agent et le rendu des rapports. Rust
+implémente uniquement les outils d'inspection du système de fichiers, exposés à Python via une
+extension native PyO3 — sans sous-processus, sans échange par fichiers temporaires.
+</p>
+<div class="bg-slate-900 rounded-lg border border-slate-700/50 p-6 font-code-snippet text-code-snippet text-slate-300 overflow-x-auto no-scrollbar">
+<pre>Python  →  extension native PyO3  →  Outils Rust
+                                        ├── path sandbox
+                                        ├── list_directory / tree
+                                        ├── read_file / file_info
+                                        └── search_text / search_files</pre>
+</div>
+</section>
+
+<!-- SECURITY -->
+<section id="securite" class="max-w-container-max w-full py-16 border-t border-outline-variant dark:border-on-secondary-fixed-variant">
+<h2 class="font-headline-md text-headline-md text-center mb-10">Modèle de sécurité</h2>
+<div class="grid md:grid-cols-2 gap-6 max-w-[900px] mx-auto">
+<div class="flex gap-3">
+<span class="material-symbols-outlined text-primary dark:text-primary-fixed">verified_user</span>
+<p class="text-body-sm text-secondary dark:text-secondary-fixed-dim"><strong class="text-on-background dark:text-surface-bright">Sandbox de projet.</strong> Chaque chemin est canonisé et vérifié pour rester à l'intérieur de la racine du projet — protection contre le path traversal, les chemins absolus et l'évasion par lien symbolique.</p>
+</div>
+<div class="flex gap-3">
+<span class="material-symbols-outlined text-primary dark:text-primary-fixed">no_accounts</span>
+<p class="text-body-sm text-secondary dark:text-secondary-fixed-dim"><strong class="text-on-background dark:text-surface-bright">Aucun accès shell.</strong> L'IA dispose exactement de six outils en lecture seule. Il n'existe et n'existera jamais d'outil d'exécution de commandes.</p>
+</div>
+<div class="flex gap-3">
+<span class="material-symbols-outlined text-primary dark:text-primary-fixed">policy</span>
+<p class="text-body-sm text-secondary dark:text-secondary-fixed-dim"><strong class="text-on-background dark:text-surface-bright">Contenu non fiable.</strong> Le dépôt audité est traité comme une donnée, jamais comme une instruction — protection explicite contre l'injection de prompt.</p>
+</div>
+<div class="flex gap-3">
+<span class="material-symbols-outlined text-primary dark:text-primary-fixed">enhanced_encryption</span>
+<p class="text-body-sm text-secondary dark:text-secondary-fixed-dim"><strong class="text-on-background dark:text-surface-bright">Chiffrement authentifié.</strong> Argon2id dérive une clé AES-256-GCM à partir de votre mot de passe ; seul un vérificateur à sens unique est stocké.</p>
+</div>
+</div>
+</section>
+
+<!-- INSTALL DETAILS -->
+<section id="installation" class="max-w-container-max w-full py-16 border-t border-outline-variant dark:border-on-secondary-fixed-variant">
+<div class="max-w-[700px] mx-auto space-y-6">
+<div>
+<h3 class="font-semibold mb-2">Plateforme prise en charge</h3>
+<p class="text-body-sm text-secondary dark:text-secondary-fixed-dim">Linux x86_64 (amd64) uniquement, pour le moment. Le paquet <code class="font-code-snippet">.deb</code> est publié sur les <a class="text-primary dark:text-primary-fixed underline" href="https://github.com/yo-le-zz/Cosmya/releases" target="_blank" rel="noopener">GitHub Releases</a> du projet.</p>
+</div>
+<div>
+<h3 class="font-semibold mb-2">Ce que fait le script d'installation</h3>
+<p class="text-body-sm text-secondary dark:text-secondary-fixed-dim">Il détecte votre système et votre architecture, télécharge le <code class="font-code-snippet">.deb</code> correspondant depuis GitHub Releases, vérifie sa somme de contrôle, puis l'installe. Il ne compile rien et ne nécessite ni Rust, ni Python, ni uv.</p>
+</div>
+<div>
+<h3 class="font-semibold mb-2">Installation manuelle</h3>
+<pre class="bg-slate-900 rounded-lg border border-slate-700/50 p-4 font-code-snippet text-code-snippet text-slate-300 overflow-x-auto no-scrollbar">sudo apt install ./cosmya_0.1.0_amd64.deb</pre>
+</div>
+<div>
+<h3 class="font-semibold mb-2">Désinstallation</h3>
+<pre class="bg-slate-900 rounded-lg border border-slate-700/50 p-4 font-code-snippet text-code-snippet text-slate-300 overflow-x-auto no-scrollbar">sudo apt remove cosmya</pre>
+</div>
+</div>
+</section>
+
+</main>
+
+<footer class="w-full mt-8 bg-surface-bright dark:bg-on-background border-t border-outline-variant dark:border-on-secondary-fixed-variant transition-colors duration-300">
+<div class="max-w-container-max mx-auto px-gutter py-stack-md flex flex-col md:flex-row justify-between items-center gap-stack-sm">
+<span class="font-label-caps text-label-caps text-on-surface-variant dark:text-secondary-fixed-dim opacity-80">© 2026 yo-le-zz. Cosmya est distribué sous licence YO-LE-ZZ COMMUNITY LICENSE v1.0.</span>
+<nav class="flex flex-wrap justify-center gap-4 md:gap-6">
+<a class="font-body-sm text-body-sm text-secondary dark:text-secondary-fixed-dim hover:text-primary dark:hover:text-primary-fixed opacity-80 hover:opacity-100 transition-all duration-200" href="https://github.com/yo-le-zz/Cosmya#readme" target="_blank" rel="noopener">Documentation</a>
+<a class="font-body-sm text-body-sm text-secondary dark:text-secondary-fixed-dim hover:text-primary dark:hover:text-primary-fixed opacity-80 hover:opacity-100 transition-all duration-200" href="https://github.com/yo-le-zz/Cosmya/releases" target="_blank" rel="noopener">Changelog</a>
+<a class="font-body-sm text-body-sm text-secondary dark:text-secondary-fixed-dim hover:text-primary dark:hover:text-primary-fixed opacity-80 hover:opacity-100 transition-all duration-200" href="https://github.com/yo-le-zz/Cosmya" target="_blank" rel="noopener">GitHub</a>
+<a class="font-body-sm text-body-sm text-secondary dark:text-secondary-fixed-dim hover:text-primary dark:hover:text-primary-fixed opacity-80 hover:opacity-100 transition-all duration-200" href="https://github.com/yo-le-zz/Cosmya/issues" target="_blank" rel="noopener">Support</a>
+</nav>
+</div>
+</footer>
+
+<script>
+    const themeToggle = document.getElementById('theme-toggle');
+    const html = document.documentElement;
+    themeToggle.addEventListener('click', () => {
+        if (html.classList.contains('dark')) {
+            html.classList.remove('dark'); html.classList.add('light');
+        } else {
+            html.classList.remove('light'); html.classList.add('dark');
+        }
+    });
+
+    const copyBtn = document.getElementById('copy-button');
+    const commandText = "curl -fsSL https://raw.githubusercontent.com/yo-le-zz/Cosmya/main/install.sh | bash";
+    const toast = document.getElementById('copy-toast');
+    let toastTimeout;
+
+    copyBtn.addEventListener('click', () => {
+        navigator.clipboard.writeText(commandText).then(() => {
+            toast.classList.remove('opacity-0');
+            toast.classList.add('opacity-100');
+            const icon = copyBtn.querySelector('span');
+            icon.textContent = 'check';
+            icon.classList.add('text-green-400');
+            clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => {
+                toast.classList.remove('opacity-100');
+                toast.classList.add('opacity-0');
+                icon.textContent = 'content_copy';
+                icon.classList.remove('text-green-400');
+            }, 2000);
+        });
+    });
+
+    // Scrollspy: highlight the nav link for whichever section is actually
+    // in view, instead of a hardcoded "active" link.
+    const navLinks = document.querySelectorAll('.nav-link[data-section]');
+    const sections = Array.from(navLinks)
+        .map((link) => document.getElementById(link.dataset.section))
+        .filter(Boolean);
+
+    const setActive = (sectionId) => {
+        navLinks.forEach((link) => {
+            link.classList.toggle('active', link.dataset.section === sectionId);
+        });
+    };
+
+    const observer = new IntersectionObserver(
+        (entries) => {
+            const visible = entries
+                .filter((e) => e.isIntersecting)
+                .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+            if (visible) {
+                setActive(visible.target.id);
+            }
+        },
+        { rootMargin: '-96px 0px -60% 0px', threshold: [0, 0.25, 0.5, 0.75, 1] }
+    );
+
+    sections.forEach((section) => observer.observe(section));
+</script>
+</body>
+</html>
