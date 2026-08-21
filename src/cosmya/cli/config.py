@@ -214,9 +214,23 @@ def model_menu() -> None:
         questionary.press_any_key_to_continue().ask()
         return
 
+    # The vault password is asked for here, BEFORE the async event loop
+    # below starts: questionary's synchronous .ask() drives its own
+    # internal asyncio.run(), which raises RuntimeError if called while
+    # another event loop (the one driving model discovery) is already
+    # running. Asking once up front also avoids fighting Rich's live
+    # status spinner for terminal control, and since one password unlocks
+    # the whole credential vault, it only needs to be asked once here
+    # rather than per provider.
+    vault_password: str | None = os.environ.get("COSMYA_VAULT_PASSWORD")
+    if vault_password is None and any(p.requires_api_key for p in all_configured):
+        vault_password = questionary.password(
+            "Enter your credential password to load provider models:"
+        ).ask()
+
     console.print(Panel("Discovering available models...", style="bold"))
     with console.status("Querying configured providers..."):
-        models = asyncio.run(_discover_all_models(list(all_configured)))
+        models = asyncio.run(_discover_all_models(list(all_configured), vault_password))
 
     if not models:
         console.print(
@@ -244,31 +258,22 @@ def model_menu() -> None:
     questionary.press_any_key_to_continue().ask()
 
 
-async def _discover_all_models(providers: list[ProviderName]) -> list[ModelInfo]:
+async def _discover_all_models(
+    providers: list[ProviderName], vault_password: str | None
+) -> list[ModelInfo]:
     results: list[ModelInfo] = []
     for provider in providers:
         api_key = None
         if provider.requires_api_key:
-            password = os.environ.get("COSMYA_VAULT_PASSWORD")
-            if password:
-                try:
-                    api_key = vault.get_api_key(provider, password)
-                except (KeyError, FileNotFoundError, WrongPasswordError):
-                    continue
-            else:
-                # Interactive prompt for the vault password, once per menu visit.
-                password = questionary.password(
-                    f"Enter your credential password to load {provider.display_label} models:"
-                ).ask()
-                if not password:
-                    continue
-                try:
-                    api_key = vault.get_api_key(provider, password)
-                except (KeyError, FileNotFoundError, WrongPasswordError):
-                    console.print(
-                        f"[red]Could not unlock credentials for {provider.display_label}.[/red]"
-                    )
-                    continue
+            if not vault_password:
+                continue
+            try:
+                api_key = vault.get_api_key(provider, vault_password)
+            except (KeyError, FileNotFoundError, WrongPasswordError):
+                console.print(
+                    f"[red]Could not unlock credentials for {provider.display_label}.[/red]"
+                )
+                continue
         adapter = create_provider(provider, api_key)
         try:
             results.extend(await adapter.list_models())

@@ -95,10 +95,7 @@ fn search_files<'py>(
 /// `pythonize`, so every tool returns a plain, structured Python object
 /// (never a formatted string) as required by Cosmya's internal tool
 /// protocol.
-fn to_py_dict<'py, T: serde::Serialize>(
-    py: Python<'py>,
-    value: &T,
-) -> PyResult<Bound<'py, PyAny>> {
+fn to_py_dict<'py, T: serde::Serialize>(py: Python<'py>, value: &T) -> PyResult<Bound<'py, PyAny>> {
     pythonize(py, value).map_err(|e| pyo3::exceptions::PyValueError::new_err(e.to_string()))
 }
 
