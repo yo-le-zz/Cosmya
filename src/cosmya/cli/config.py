@@ -1,11 +1,12 @@
 """Implements `cosmya config`: the interactive configuration menu system.
 
-Screen layout follows the spec exactly:
+Screen layout follows the spec:
 
     cosmya config
     -> 1. Providers  2. Model  3. Preferences  0. Exit
 
-    Providers -> 1. OpenAI 2. Gemini 3. Claude 4. Ollama 0. Back
+    Providers -> one numbered entry per ProviderName, generated dynamically
+    (see providers_menu()), plus 0. Back.
 
 Every provider-configuring path is: clear screen -> explain -> collect API
 key -> collect/verify protection password -> encrypt & store -> test
@@ -76,39 +77,32 @@ def config_main_menu() -> None:
 
 
 def providers_menu() -> None:
+    providers = list(ProviderName)
     while True:
         clear_screen()
         configured = set(vault.configured_providers())
         table = Table(title="Providers", show_header=False)
         table.add_column("Provider")
         table.add_column("Status")
-        for provider in ProviderName:
+        for provider in providers:
             table.add_row(
                 provider.display_label, _provider_status_label(provider, configured)
             )
         console.print(table)
 
+        choices = [f"{i}. {p.display_label}" for i, p in enumerate(providers, start=1)]
+        choices.append("0. Back")
         choice = questionary.select(
             "Select a provider to configure:",
-            choices=[
-                "1. OpenAI",
-                "2. Gemini",
-                "3. Claude",
-                "4. Ollama",
-                "0. Back",
-            ],
+            choices=choices,
         ).ask()
 
         if choice is None or choice.startswith("0"):
             clear_screen()
             return
 
-        provider = {
-            "1": ProviderName.OPENAI,
-            "2": ProviderName.GEMINI,
-            "3": ProviderName.CLAUDE,
-            "4": ProviderName.OLLAMA,
-        }[choice[0]]
+        index = int(choice.split(".", 1)[0]) - 1
+        provider = providers[index]
         configure_provider(provider)
 
 

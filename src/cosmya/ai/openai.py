@@ -82,10 +82,10 @@ class OpenAIProvider(AIProvider):
     ) -> CompletionResult:
         body = {
             "model": model_id,
-            "messages": [_to_openai_message(m) for m in messages],
+            "messages": [to_openai_message(m) for m in messages],
         }
         if tools:
-            body["tools"] = [_to_openai_tool(t) for t in tools]
+            body["tools"] = [to_openai_tool(t) for t in tools]
 
         async with httpx.AsyncClient(timeout=_TIMEOUT) as client:
             response = await self._request_with_retries(
@@ -127,7 +127,7 @@ class OpenAIProvider(AIProvider):
         )
 
 
-def _to_openai_message(message: ChatMessage) -> dict:
+def to_openai_message(message: ChatMessage) -> dict:
     if message.role == "tool" and message.tool_result:
         return {
             "role": "tool",
@@ -147,7 +147,7 @@ def _to_openai_message(message: ChatMessage) -> dict:
     return out
 
 
-def _to_openai_tool(tool: ToolDefinition) -> dict:
+def to_openai_tool(tool: ToolDefinition) -> dict:
     return {
         "type": "function",
         "function": {

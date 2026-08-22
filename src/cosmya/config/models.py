@@ -20,12 +20,26 @@ CREDENTIAL_SCHEMA_VERSION = 1
 
 
 class ProviderName(str, Enum):
-    """The four AI providers Cosmya supports."""
+    """The AI providers Cosmya supports.
+
+    OpenAI, Gemini, Claude, and Ollama have bespoke adapters (each provider's
+    wire format differs). Everything else here exposes an OpenAI-compatible
+    chat-completions + model-listing API and shares a single adapter --
+    see ``ai/openai_compatible.py``.
+    """
 
     OPENAI = "openai"
     GEMINI = "gemini"
     CLAUDE = "claude"
     OLLAMA = "ollama"
+    GROQ = "groq"
+    OPENROUTER = "openrouter"
+    MISTRAL = "mistral"
+    DEEPSEEK = "deepseek"
+    XAI = "xai"
+    TOGETHER = "together"
+    FIREWORKS = "fireworks"
+    CEREBRAS = "cerebras"
 
     @property
     def display_label(self) -> str:
@@ -34,6 +48,14 @@ class ProviderName(str, Enum):
             ProviderName.GEMINI: "Gemini",
             ProviderName.CLAUDE: "Claude",
             ProviderName.OLLAMA: "Ollama",
+            ProviderName.GROQ: "Groq",
+            ProviderName.OPENROUTER: "OpenRouter",
+            ProviderName.MISTRAL: "Mistral",
+            ProviderName.DEEPSEEK: "DeepSeek",
+            ProviderName.XAI: "xAI",
+            ProviderName.TOGETHER: "Together AI",
+            ProviderName.FIREWORKS: "Fireworks AI",
+            ProviderName.CEREBRAS: "Cerebras",
         }[self]
 
     @property
