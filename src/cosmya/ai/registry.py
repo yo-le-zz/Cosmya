@@ -12,6 +12,7 @@ from cosmya.ai.openai_compatible import (
     FireworksProvider,
     GroqProvider,
     MistralProvider,
+    OmniRouteProvider,
     OpenRouterProvider,
     TogetherProvider,
     XAIProvider,
@@ -32,6 +33,7 @@ _PROVIDER_CLASSES: dict[ProviderName, type[AIProvider]] = {
     ProviderName.TOGETHER: TogetherProvider,
     ProviderName.FIREWORKS: FireworksProvider,
     ProviderName.CEREBRAS: CerebrasProvider,
+    ProviderName.OMNIROUTE: OmniRouteProvider,
 }
 
 _unregistered = set(ProviderName) - set(_PROVIDER_CLASSES)

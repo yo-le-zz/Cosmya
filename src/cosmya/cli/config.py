@@ -40,7 +40,7 @@ def clear_screen() -> None:
 def _provider_status_label(
     provider: ProviderName, configured_names: set[ProviderName]
 ) -> str:
-    if provider is ProviderName.OLLAMA:
+    if not provider.requires_api_key:
         return (
             "[green]●[/green] Available"
             if provider in configured_names
@@ -80,7 +80,13 @@ def providers_menu() -> None:
     providers = list(ProviderName)
     while True:
         clear_screen()
-        configured = set(vault.configured_providers())
+        # Vault-backed providers (API-key ones) and keyless providers
+        # (Ollama, OmniRoute) are tracked in two different places -- the
+        # encrypted vault vs. config.toml's configured_providers list --
+        # so the status table has to check both, or keyless providers
+        # would show "Not checked" forever even once verified reachable.
+        config = manager.load_config()
+        configured = set(vault.configured_providers()) | set(config.configured_providers)
         table = Table(title="Providers", show_header=False)
         table.add_column("Provider")
         table.add_column("Status")

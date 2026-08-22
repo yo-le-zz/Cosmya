@@ -40,6 +40,7 @@ class ProviderName(str, Enum):
     TOGETHER = "together"
     FIREWORKS = "fireworks"
     CEREBRAS = "cerebras"
+    OMNIROUTE = "omniroute"
 
     @property
     def display_label(self) -> str:
@@ -56,11 +57,18 @@ class ProviderName(str, Enum):
             ProviderName.TOGETHER: "Together AI",
             ProviderName.FIREWORKS: "Fireworks AI",
             ProviderName.CEREBRAS: "Cerebras",
+            ProviderName.OMNIROUTE: "OmniRoute",
         }[self]
 
     @property
     def requires_api_key(self) -> bool:
-        return self is not ProviderName.OLLAMA
+        # Ollama and OmniRoute are both local, self-hosted gateways that
+        # work out of the box with no credential (OmniRoute: "Works the
+        # second you install it -- no keys, no config"). OmniRoute does
+        # optionally accept a bearer token for its own remote-mode auth,
+        # which the provider adapter supports if one is configured, but it
+        # is never required.
+        return self not in (ProviderName.OLLAMA, ProviderName.OMNIROUTE)
 
 
 class SelectedModel(BaseModel):

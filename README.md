@@ -21,9 +21,10 @@ risks, and dependency-related risks when detectable.
 
 - **Terminal-only**, polished CLI built with [Typer](https://typer.tiangolo.com/)
   and [Rich](https://rich.readthedocs.io/) -- no web UI, no desktop GUI.
-- **12 AI providers**: OpenAI, Google Gemini, Anthropic Claude, local
+- **13 AI providers**: OpenAI, Google Gemini, Anthropic Claude, local
   Ollama, Groq, OpenRouter, Mistral, DeepSeek, xAI, Together AI,
-  Fireworks AI, and Cerebras, behind a single unified provider abstraction.
+  Fireworks AI, Cerebras, and OmniRoute (a self-hosted gateway to
+  hundreds more), behind a single unified provider abstraction.
 - **Automatic model discovery** -- Cosmya queries each configured provider for
   the models actually available to your account; nothing is hardcoded.
 - **Encrypted credential storage** -- API keys are protected with
@@ -81,12 +82,13 @@ Python  ->  PyO3 native extension  ->  Rust tools
 | Together AI | Yes | OpenAI-compatible API |
 | Fireworks AI | Yes | OpenAI-compatible API |
 | Cerebras | Yes | OpenAI-compatible API |
+| OmniRoute | No | Self-hosted OpenAI-compatible gateway (default `http://localhost:20128/v1`); routes to hundreds of upstream providers itself. See [OmniRoute](https://github.com/diegosouzapw/OmniRoute). |
 
 OpenAI, Gemini, Claude, and Ollama each have a bespoke adapter for their
-own wire format. The other eight all expose an OpenAI-compatible
+own wire format. The other nine all expose an OpenAI-compatible
 chat-completions and model-listing API, so they share a single adapter
 (`ai/openai_compatible.py`) rather than duplicating request/response
-handling eight times.
+handling nine times.
 
 ### Security model
 

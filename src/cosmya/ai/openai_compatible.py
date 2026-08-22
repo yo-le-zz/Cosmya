@@ -1,14 +1,15 @@
 """Shared adapter for providers that expose an OpenAI-compatible REST API.
 
-Groq, OpenRouter, Mistral, DeepSeek, xAI, Together AI, Fireworks AI, and
-Cerebras all implement the same wire format OpenAI does for
+Groq, OpenRouter, Mistral, DeepSeek, xAI, Together AI, Fireworks AI,
+Cerebras, and OmniRoute all implement the same wire format OpenAI does for
 ``GET /models`` and ``POST /chat/completions`` (this is a de facto industry
 convention, not a coincidence -- it's what lets people point existing
 OpenAI-SDK code at a different base URL). Rather than duplicating
-``cosmya.ai.openai``'s request/response handling eight times, every one of
+``cosmya.ai.openai``'s request/response handling for each one, every one of
 these providers is a thin subclass of :class:`OpenAICompatibleProvider`
-that only sets an API base URL (and, rarely, a couple of extra headers).
-The message/tool wire-format conversion helpers are imported directly from
+that only sets an API base URL (and, rarely, a couple of extra headers or,
+for OmniRoute, an optional-rather-than-required API key). The message/tool
+wire-format conversion helpers are imported directly from
 ``cosmya.ai.openai`` so there is exactly one implementation of that format
 in the codebase.
 
@@ -173,3 +174,31 @@ class FireworksProvider(OpenAICompatibleProvider):
 class CerebrasProvider(OpenAICompatibleProvider):
     name = ProviderName.CEREBRAS
     api_base = "https://api.cerebras.ai/v1"
+
+
+class OmniRouteProvider(OpenAICompatibleProvider):
+    """OmniRoute (https://github.com/diegosouzapw/OmniRoute) is a
+    self-hosted AI gateway you run locally that itself fans out to
+    hundreds of upstream providers behind one OpenAI-compatible endpoint.
+    From Cosmya's point of view it's just another OpenAI-compatible
+    provider -- except, like Ollama, it's local and requires no API key
+    out of the box ("works the second you install it -- no keys, no
+    config"). OmniRoute's own remote mode does support scoped bearer
+    tokens for its own gateway auth, so a key is honored if one is
+    configured, but Cosmya never requires it.
+    """
+
+    name = ProviderName.OMNIROUTE
+    api_base = "http://localhost:20128/v1"
+
+    def __init__(self, api_key: str | None = None, *, base_url: str | None = None) -> None:
+        super().__init__(api_key=api_key, base_url=base_url)
+        if base_url:
+            self.api_base = base_url
+
+    def _headers(self) -> dict[str, str]:
+        headers = {"Content-Type": "application/json"}
+        if self._api_key:
+            headers["Authorization"] = f"Bearer {self._api_key}"
+        headers.update(self.extra_headers)
+        return headers

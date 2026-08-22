@@ -53,3 +53,35 @@ def test_providers_menu_selects_correct_provider_past_index_nine(monkeypatch):
     config_module.providers_menu()
 
     assert recorded == [ProviderName.TOGETHER]
+
+
+def test_keyless_provider_status_reflects_config_after_being_configured(monkeypatch):
+    """Regression test: Ollama/OmniRoute never appear in
+    vault.configured_providers() (they store no credential), so the status
+    table must also check config.configured_providers -- otherwise a
+    successfully-configured keyless provider shows "Not checked" forever."""
+    import cosmya.cli.config as config_module
+    from cosmya.config import manager
+    from cosmya.config.models import AppConfig
+
+    manager.save_config(AppConfig(configured_providers=[ProviderName.OMNIROUTE]))
+
+    calls = iter([_FakeQuestion("0. Back")])
+    monkeypatch.setattr(config_module.questionary, "select", lambda *a, **k: next(calls))
+
+    printed: list[object] = []
+    monkeypatch.setattr(config_module.console, "clear", lambda: None)
+    monkeypatch.setattr(config_module.console, "print", lambda *a, **k: printed.append(a))
+
+    config_module.providers_menu()
+
+    # The Table object itself was printed; render it to check its content.
+    from rich.console import Console
+
+    render_console = Console(file=__import__("io").StringIO(), width=120)
+    for call_args in printed:
+        for arg in call_args:
+            if hasattr(arg, "columns"):  # a rich.table.Table
+                render_console.print(arg)
+    rendered = render_console.file.getvalue()
+    assert "Available" in rendered
