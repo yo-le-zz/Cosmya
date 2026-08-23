@@ -101,3 +101,99 @@ def test_model_menu_select_call_is_constructible(monkeypatch):
     )
 
     config_module.model_menu()  # must not raise
+
+
+class _FakeQuestion:
+    def __init__(self, answer):
+        self._answer = answer
+
+    def ask(self):
+        return self._answer
+
+
+def test_maybe_extend_declines_by_default_returns_original_models(monkeypatch):
+    import cosmya.cli.config as config_module
+
+    monkeypatch.setattr(
+        config_module.questionary, "confirm", lambda *a, **k: _FakeQuestion(False)
+    )
+    models = _sample_models()
+    result = config_module._maybe_extend_with_omniroute_catalog(models, "pw")
+    assert result == models
+
+
+def test_maybe_extend_appends_free_catalog_models(monkeypatch):
+    import cosmya.cli.config as config_module
+    from cosmya.config.models import ProviderName as PN
+
+    answers = iter([_FakeQuestion(True), _FakeQuestion(True)])  # browse=True, free_only=True
+    monkeypatch.setattr(config_module.questionary, "confirm", lambda *a, **k: next(answers))
+    monkeypatch.setattr(config_module.vault, "get_api_key", lambda provider, password: "fake-key")
+
+    captured_free_only = {}
+
+    class FakeOmniRoute:
+        async def list_catalog_models(self, *, free_only):
+            captured_free_only["value"] = free_only
+            return [
+                ModelInfo(
+                    id="oc/free-model",
+                    display_name="oc/free-model \U0001f193",
+                    provider=PN.OMNIROUTE,
+                )
+            ]
+
+    monkeypatch.setattr(config_module, "create_provider", lambda name, key: FakeOmniRoute())
+
+    models = _sample_models()
+    result = config_module._maybe_extend_with_omniroute_catalog(models, "pw")
+
+    assert captured_free_only["value"] is True
+    ids = [m.id for m in result]
+    assert "oc/free-model" in ids
+    assert len(result) == len(models) + 1
+
+
+def test_maybe_extend_confirm_calls_are_constructible(monkeypatch):
+    """Same category of bug as the select() regression test: let the real
+    questionary.confirm(...) constructor run (only stubbing .ask()), so an
+    invalid kwarg combination can't silently pass a fully-mocked suite."""
+    import cosmya.cli.config as config_module
+
+    real_confirm = config_module.questionary.confirm
+    answers = iter([False])  # decline browsing -- short-circuits before any network use
+
+    def confirm_but_stub_ask(*args, **kwargs):
+        question = real_confirm(*args, **kwargs)  # must not raise
+        monkeypatch.setattr(question, "ask", lambda: next(answers))
+        return question
+
+    monkeypatch.setattr(config_module.questionary, "confirm", confirm_but_stub_ask)
+
+    models = _sample_models()
+    result = config_module._maybe_extend_with_omniroute_catalog(models, "pw")
+    assert result == models
+    """If the catalog happens to include a model id already covered by the
+    curated auto aliases, it must not be added twice."""
+    import cosmya.cli.config as config_module
+    from cosmya.config.models import ProviderName as PN
+
+    models = _sample_models()  # already includes id "auto" for OMNIROUTE
+
+    class FakeOmniRoute:
+        async def list_catalog_models(self, *, free_only):
+            return [
+                ModelInfo(id="auto", display_name="Auto (dup)", provider=PN.OMNIROUTE),
+                ModelInfo(id="oc/new-model", display_name="oc/new-model", provider=PN.OMNIROUTE),
+            ]
+
+    answers = iter([_FakeQuestion(True), _FakeQuestion(False)])
+    monkeypatch.setattr(config_module.questionary, "confirm", lambda *a, **k: next(answers))
+    monkeypatch.setattr(config_module, "create_provider", lambda name, key: FakeOmniRoute())
+    monkeypatch.setattr(config_module.vault, "get_api_key", lambda provider, password: "fake-key")
+
+    result = config_module._maybe_extend_with_omniroute_catalog(models, "pw")
+
+    ids = [m.id for m in result]
+    assert ids.count("auto") == 1
+    assert "oc/new-model" in ids

@@ -178,10 +178,20 @@ and storing the key, testing connectivity, and discovering available models.
 OmniRoute is a special case: since its own catalog can list 1000+ upstream
 models, Cosmya only ever offers OmniRoute's own `auto` routing aliases
 (`auto`, `auto/coding`, `auto/fast`, `auto/cheap`, `auto/offline`,
-`auto/smart`) rather than the full list. Successfully configuring OmniRoute
-also immediately sets it as your active model (`auto`), so audits route
-through it by default -- you can still pick something else afterwards from
-Model.
+`auto/smart`) by default rather than the full list. Successfully configuring
+OmniRoute also immediately sets it as your active model (`auto`), so audits
+route through it by default -- you can still pick something else afterwards
+from Model.
+
+If you'd rather pick a specific upstream provider/model through OmniRoute
+instead of an `auto` alias, the Model menu offers to browse OmniRoute's real
+catalog when OmniRoute is configured, with an option to show only free
+models. Free-model detection is best-effort (OmniRoute's public model list
+doesn't guarantee a pricing field), based on whichever of an explicit
+free/is_free flag, a zero-cost `pricing` object, or OpenRouter's `:free` id
+suffix convention the entry actually provides -- OmniRoute's own
+`/dashboard/free-tiers` page is the authoritative source if something looks
+misclassified.
 
 ### Running an audit
 

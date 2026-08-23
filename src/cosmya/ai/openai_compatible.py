@@ -217,3 +217,85 @@ class OmniRouteProvider(OpenAICompatibleProvider):
             ModelInfo(id=model_id, display_name=label, provider=self.name)
             for model_id, label in OMNIROUTE_AUTO_MODEL_LABELS.items()
         ]
+
+    async def list_catalog_models(self, *, free_only: bool = True) -> list[ModelInfo]:
+        """Fetch OmniRoute's real upstream catalog -- the full 1000+-model
+        list :meth:`list_models` deliberately hides -- for people who want
+        to pick a specific provider/model instead of an ``auto`` alias.
+
+        Free detection is BEST-EFFORT. OmniRoute's public ``GET /v1/models``
+        is documented only as "OpenAI format"; the bare OpenAI model-list
+        schema carries no pricing field at all. This looks for whichever of
+        the following signals a given entry actually provides, in order:
+        an explicit ``free``/``is_free`` boolean; a ``pricing`` object
+        (an extension several OpenAI-compatible gateways add) where every
+        present cost field is zero; or OpenRouter's own ``:free`` id
+        suffix convention (which OmniRoute would preserve verbatim for
+        OpenRouter-sourced models, since it proxies ids through as-is). A
+        model exposing none of these signals is treated as *not confirmed
+        free* -- excluded when ``free_only=True`` -- rather than assumed
+        free either way. OmniRoute's own dashboard
+        (``/dashboard/free-tiers``) is the authoritative source if this
+        ever mis-classifies something; Cosmya has no access to that
+        dashboard's data.
+        """
+        async with httpx.AsyncClient(timeout=_TIMEOUT) as client:
+            response = await self._request_with_retries(
+                client, "GET", f"{self.api_base}/models", headers=self._headers()
+            )
+            try:
+                payload = response.json()
+            except json.JSONDecodeError as exc:
+                raise InvalidResponseError(
+                    "OmniRoute returned a non-JSON model list."
+                ) from exc
+
+        models: list[ModelInfo] = []
+        for entry in payload.get("data", []):
+            model_id = entry.get("id")
+            if not model_id:
+                continue
+            is_free = _looks_free(entry)
+            if free_only and not is_free:
+                continue
+            models.append(
+                ModelInfo(
+                    id=model_id,
+                    display_name=f"{model_id} \U0001f193" if is_free else model_id,
+                    provider=self.name,
+                    metadata={"free": is_free},
+                )
+            )
+        return models
+
+
+def _looks_free(entry: dict) -> bool:
+    """Best-effort free-tier detection for one OmniRoute catalog entry.
+    See :meth:`OmniRouteProvider.list_catalog_models` for the caveats."""
+    for key in ("free", "is_free", "isFree"):
+        value = entry.get(key)
+        if isinstance(value, bool):
+            return value
+
+    pricing = entry.get("pricing")
+    if isinstance(pricing, dict):
+        cost_fields = [
+            pricing[k]
+            for k in ("prompt", "completion", "input", "output", "request", "image")
+            if k in pricing
+        ]
+        if cost_fields:
+            return all(_is_zero_cost(v) for v in cost_fields)
+
+    model_id = entry.get("id", "")
+    if isinstance(model_id, str) and model_id.endswith(":free"):
+        return True
+
+    return False
+
+
+def _is_zero_cost(value: object) -> bool:
+    try:
+        return float(value) == 0.0  # type: ignore[arg-type]
+    except (TypeError, ValueError):
+        return False

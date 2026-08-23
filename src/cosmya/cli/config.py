@@ -303,6 +303,9 @@ def model_menu() -> None:
     with console.status("Querying configured providers..."):
         models = asyncio.run(_discover_all_models(list(all_configured), vault_password))
 
+    if ProviderName.OMNIROUTE in all_configured:
+        models = _maybe_extend_with_omniroute_catalog(models, vault_password)
+
     if not models:
         console.print(
             "[yellow]No models could be discovered from any configured provider.[/yellow]"
@@ -330,6 +333,62 @@ def model_menu() -> None:
     manager.save_config(config)
     console.print(f"[green]Selected model:[/green] {selected.label()}")
     questionary.press_any_key_to_continue().ask()
+
+
+def _maybe_extend_with_omniroute_catalog(
+    models: list[ModelInfo], vault_password: str | None
+) -> list[ModelInfo]:
+    """Offers to add OmniRoute's real upstream catalog to the model list,
+    on top of the curated `auto` aliases already in `models` -- so picking
+    a specific provider/model through OmniRoute is possible, not just
+    `auto`. Declined by default (a fast Enter keeps the previous
+    behavior); when accepted, defaults to free-only, since the unfiltered
+    catalog is 1000+ models regardless of which upstream provider they
+    come from.
+    """
+    browse = questionary.confirm(
+        "OmniRoute can also route to one specific provider/model instead of "
+        "just 'auto'. Browse OmniRoute's own catalog?",
+        default=False,
+    ).ask()
+    if not browse:
+        return models
+
+    free_only = questionary.confirm(
+        "Show only free models? (OmniRoute's full catalog is 1000+ models "
+        "across all its providers; free-model detection is best-effort -- "
+        "see the README for details)",
+        default=True,
+    ).ask()
+
+    api_key: str | None = None
+    if vault_password:
+        try:
+            api_key = vault.get_api_key(ProviderName.OMNIROUTE, vault_password)
+        except (KeyError, FileNotFoundError, WrongPasswordError):
+            console.print("[red]Could not unlock OmniRoute credentials.[/red]")
+            return models
+    if api_key is None:
+        console.print("[red]OmniRoute requires a credential password to browse its catalog.[/red]")
+        return models
+
+    omniroute = create_provider(ProviderName.OMNIROUTE, api_key)
+    with console.status("Fetching OmniRoute's catalog..."):
+        try:
+            catalog_models = asyncio.run(
+                omniroute.list_catalog_models(free_only=bool(free_only))
+            )
+        except ProviderError as exc:
+            console.print(f"[yellow]OmniRoute catalog: {exc}[/yellow]")
+            return models
+
+    if not catalog_models:
+        console.print("[yellow]No matching OmniRoute models found.[/yellow]")
+        return models
+
+    existing_ids = {m.id for m in models if m.provider == ProviderName.OMNIROUTE}
+    new_models = [m for m in catalog_models if m.id not in existing_ids]
+    return models + new_models
 
 
 def _build_model_choices(models: list[ModelInfo]) -> list["questionary.Choice"]:
