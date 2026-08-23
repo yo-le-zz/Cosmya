@@ -7,9 +7,9 @@ convention, not a coincidence -- it's what lets people point existing
 OpenAI-SDK code at a different base URL). Rather than duplicating
 ``cosmya.ai.openai``'s request/response handling for each one, every one of
 these providers is a thin subclass of :class:`OpenAICompatibleProvider`
-that only sets an API base URL (and, rarely, a couple of extra headers or,
-for OmniRoute, an optional-rather-than-required API key). The message/tool
-wire-format conversion helpers are imported directly from
+that only sets an API base URL (and, rarely, a couple of extra headers, or
+for OmniRoute, a curated model list -- see that class's docstring). The
+message/tool wire-format conversion helpers are imported directly from
 ``cosmya.ai.openai`` so there is exactly one implementation of that format
 in the codebase.
 
@@ -176,16 +176,31 @@ class CerebrasProvider(OpenAICompatibleProvider):
     api_base = "https://api.cerebras.ai/v1"
 
 
+OMNIROUTE_AUTO_MODEL_LABELS: dict[str, str] = {
+    "auto": "Auto (balanced default)",
+    "auto/coding": "Auto — coding-optimized",
+    "auto/fast": "Auto — lowest latency",
+    "auto/cheap": "Auto — cheapest per token",
+    "auto/offline": "Auto — most quota headroom",
+    "auto/smart": "Auto — quality + exploration",
+}
+
+
 class OmniRouteProvider(OpenAICompatibleProvider):
     """OmniRoute (https://github.com/diegosouzapw/OmniRoute) is a
     self-hosted AI gateway you run locally that itself fans out to
     hundreds of upstream providers behind one OpenAI-compatible endpoint.
     From Cosmya's point of view it's just another OpenAI-compatible
-    provider -- except, like Ollama, it's local and requires no API key
-    out of the box ("works the second you install it -- no keys, no
-    config"). OmniRoute's own remote mode does support scoped bearer
-    tokens for its own gateway auth, so a key is honored if one is
-    configured, but Cosmya never requires it.
+    provider, requiring an API key like the rest.
+
+    OmniRoute's own live catalog can list 1000+ upstream models, which
+    would make Cosmya's single flat model-selection list unusable. Rather
+    than surface that whole catalog, :meth:`list_models` still performs
+    the real network call (so a bad key or unreachable gateway is still
+    caught exactly as for every other provider) but returns only
+    OmniRoute's own documented ``auto`` routing aliases -- which is what
+    you actually want to pick day to day, since OmniRoute chooses the
+    concrete upstream model for you.
     """
 
     name = ProviderName.OMNIROUTE
@@ -196,9 +211,9 @@ class OmniRouteProvider(OpenAICompatibleProvider):
         if base_url:
             self.api_base = base_url
 
-    def _headers(self) -> dict[str, str]:
-        headers = {"Content-Type": "application/json"}
-        if self._api_key:
-            headers["Authorization"] = f"Bearer {self._api_key}"
-        headers.update(self.extra_headers)
-        return headers
+    async def list_models(self) -> list[ModelInfo]:
+        await super().list_models()  # connectivity/auth check; result discarded
+        return [
+            ModelInfo(id=model_id, display_name=label, provider=self.name)
+            for model_id, label in OMNIROUTE_AUTO_MODEL_LABELS.items()
+        ]

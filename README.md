@@ -82,7 +82,7 @@ Python  ->  PyO3 native extension  ->  Rust tools
 | Together AI | Yes | OpenAI-compatible API |
 | Fireworks AI | Yes | OpenAI-compatible API |
 | Cerebras | Yes | OpenAI-compatible API |
-| OmniRoute | No | Self-hosted OpenAI-compatible gateway (default `http://localhost:20128/v1`); routes to hundreds of upstream providers itself. See [OmniRoute](https://github.com/diegosouzapw/OmniRoute). |
+| OmniRoute | Yes | Self-hosted OpenAI-compatible gateway (default `http://localhost:20128/v1`); routes to hundreds of upstream providers itself. Model selection is limited to OmniRoute's own `auto` routing aliases rather than its full upstream catalog. See [OmniRoute](https://github.com/diegosouzapw/OmniRoute). |
 
 OpenAI, Gemini, Claude, and Ollama each have a bespoke adapter for their
 own wire format. The other nine all expose an OpenAI-compatible
@@ -159,15 +159,29 @@ cosmya audit <path>        # run a read-only audit of a project directory
 
 ```
 cosmya config
-├── 1. Providers     -> configure OpenAI / Gemini / Claude / Ollama
+├── 1. Providers     -> configure any of Cosmya's 13 providers
 ├── 2. Model         -> discover and select a model from configured providers
 ├── 3. Preferences   -> custom instructions injected into every audit
 └── 0. Exit
 ```
 
+Both the Providers and Model lists are colorized and support type-to-search
+filtering (just start typing a name), since a flat list of 13+ providers --
+or a combined model list across several of them -- gets unwieldy fast
+otherwise. The Model list also groups entries by provider with a colored
+label, so it's clear at a glance which provider each model came from.
+
 Configuring a provider walks you through: entering an API key (masked, never
 printed), setting or entering your credential protection password, encrypting
 and storing the key, testing connectivity, and discovering available models.
+
+OmniRoute is a special case: since its own catalog can list 1000+ upstream
+models, Cosmya only ever offers OmniRoute's own `auto` routing aliases
+(`auto`, `auto/coding`, `auto/fast`, `auto/cheap`, `auto/offline`,
+`auto/smart`) rather than the full list. Successfully configuring OmniRoute
+also immediately sets it as your active model (`auto`), so audits route
+through it by default -- you can still pick something else afterwards from
+Model.
 
 ### Running an audit
 

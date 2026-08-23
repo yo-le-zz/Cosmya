@@ -5,12 +5,20 @@ Screen layout follows the spec:
     cosmya config
     -> 1. Providers  2. Model  3. Preferences  0. Exit
 
-    Providers -> one numbered entry per ProviderName, generated dynamically
-    (see providers_menu()), plus 0. Back.
+    Providers -> one colored, searchable entry per ProviderName (see
+    providers_menu()), plus Back.
 
 Every provider-configuring path is: clear screen -> explain -> collect API
 key -> collect/verify protection password -> encrypt & store -> test
 connectivity -> discover models -> show success/failure.
+
+Both the provider list and the model list use questionary.Choice objects
+carrying real values (a ProviderName / a ModelInfo) rather than parsed
+strings, and colorize entries so a long list (now 13 providers, and
+potentially many more models once several providers are configured) stays
+readable instead of a flat wall of white text. Both lists also enable
+type-to-filter search, since scrolling a long uncolored menu is exactly
+what got complained about.
 """
 
 from __future__ import annotations
@@ -25,12 +33,40 @@ from rich.table import Table
 
 from cosmya.ai.errors import ProviderError
 from cosmya.ai.models import ModelInfo
+from cosmya.ai.openai_compatible import OMNIROUTE_AUTO_MODEL_LABELS
 from cosmya.ai.registry import create_provider
 from cosmya.config import manager, vault
 from cosmya.config.encryption import WrongPasswordError
 from cosmya.config.models import Preferences, ProviderName, SelectedModel
 
 console = Console()
+
+# A stable color per provider (indexed by declaration order in
+# ProviderName), used to visually group a long model list by which
+# provider each entry came from. Plain prompt_toolkit ANSI color names, so
+# they render correctly in questionary's Choice titles (Rich markup does
+# not apply here -- that's only for console.print/Table).
+_COLOR_PALETTE = [
+    "ansicyan",
+    "ansimagenta",
+    "ansiyellow",
+    "ansigreen",
+    "ansiblue",
+    "ansired",
+    "ansibrightcyan",
+    "ansibrightmagenta",
+    "ansibrightyellow",
+    "ansibrightgreen",
+    "ansibrightblue",
+    "ansibrightred",
+    "ansiwhite",
+]
+
+
+def _provider_color(provider: ProviderName) -> str:
+    providers_in_order = list(ProviderName)
+    index = providers_in_order.index(provider) % len(_COLOR_PALETTE)
+    return _COLOR_PALETTE[index]
 
 
 def clear_screen() -> None:
@@ -76,14 +112,29 @@ def config_main_menu() -> None:
             preferences_menu()
 
 
+def _provider_choice(provider: ProviderName, configured: set[ProviderName]) -> "questionary.Choice":
+    if provider in configured:
+        dot_color, suffix = "ansigreen", ""
+    elif not provider.requires_api_key:
+        dot_color, suffix = "ansiyellow", " (not checked)"
+    else:
+        dot_color, suffix = "ansibrightblack", " (not configured)"
+    title = [
+        (f"fg:{dot_color} bold", "\u25cf "),
+        ("bold" if provider in configured else "", provider.display_label),
+        ("fg:ansibrightblack", suffix),
+    ]
+    return questionary.Choice(title=title, value=provider)
+
+
 def providers_menu() -> None:
     providers = list(ProviderName)
     while True:
         clear_screen()
         # Vault-backed providers (API-key ones) and keyless providers
-        # (Ollama, OmniRoute) are tracked in two different places -- the
-        # encrypted vault vs. config.toml's configured_providers list --
-        # so the status table has to check both, or keyless providers
+        # (currently just Ollama) are tracked in two different places --
+        # the encrypted vault vs. config.toml's configured_providers list
+        # -- so the status set has to check both, or a keyless provider
         # would show "Not checked" forever even once verified reachable.
         config = manager.load_config()
         configured = set(vault.configured_providers()) | set(config.configured_providers)
@@ -96,19 +147,19 @@ def providers_menu() -> None:
             )
         console.print(table)
 
-        choices = [f"{i}. {p.display_label}" for i, p in enumerate(providers, start=1)]
-        choices.append("0. Back")
-        choice = questionary.select(
-            "Select a provider to configure:",
+        choices = [_provider_choice(p, configured) for p in providers]
+        choices.append(questionary.Choice(title=[("fg:ansired", "Back")], value=None))
+        provider = questionary.select(
+            "Select a provider to configure (type to search):",
             choices=choices,
+            use_search_filter=True,
+            use_jk_keys=False,
         ).ask()
 
-        if choice is None or choice.startswith("0"):
+        if provider is None:
             clear_screen()
             return
 
-        index = int(choice.split(".", 1)[0]) - 1
-        provider = providers[index]
         configure_provider(provider)
 
 
@@ -163,10 +214,32 @@ def configure_provider(provider: ProviderName) -> None:
         if models:
             console.print(f"Discovered {len(models)} model(s).")
         _mark_provider_configured(provider)
+        if provider is ProviderName.OMNIROUTE:
+            _select_omniroute_auto_model()
     else:
         console.print(f"[red]Failed:[/red] {detail}")
 
     questionary.press_any_key_to_continue().ask()
+
+
+def _select_omniroute_auto_model() -> None:
+    """OmniRoute is meant to be Cosmya's default routing path: as soon as
+    it's successfully verified, it becomes the active model (OmniRoute's
+    own ``auto`` routing alias), so audits go through it without a
+    separate trip to the Model menu. This can still be changed freely
+    from Model afterwards.
+    """
+    config = manager.load_config()
+    config.selected_model = SelectedModel(
+        provider=ProviderName.OMNIROUTE,
+        model_id="auto",
+        display_name=OMNIROUTE_AUTO_MODEL_LABELS["auto"],
+    )
+    manager.save_config(config)
+    console.print(
+        "[cyan]Model set to OmniRoute's 'auto' routing -- audits will go through "
+        "OmniRoute by default. Change this anytime via Model in the config menu.[/cyan]"
+    )
 
 
 async def _test_and_discover(
@@ -198,11 +271,9 @@ def model_menu() -> None:
     clear_screen()
     configured = vault.configured_providers()
     config = manager.load_config()
-    all_configured = set(configured) | (
-        {ProviderName.OLLAMA}
-        if ProviderName.OLLAMA in config.configured_providers
-        else set()
-    )
+    all_configured = set(configured) | {
+        p for p in config.configured_providers if not p.requires_api_key
+    }
 
     if not all_configured:
         console.print(
@@ -239,14 +310,17 @@ def model_menu() -> None:
         questionary.press_any_key_to_continue().ask()
         return
 
-    choice = questionary.select(
-        "Select a model:",
-        choices=[m.label() for m in models] + ["0. Back"],
+    choices = _build_model_choices(models)
+    choices.append(questionary.Choice(title=[("fg:ansired", "Back")], value=None))
+    selected = questionary.select(
+        "Select a model (type to search):",
+        choices=choices,
+        use_search_filter=True,
+        use_jk_keys=False,
     ).ask()
-    if choice is None or choice == "0. Back":
+    if selected is None:
         return
 
-    selected = next(m for m in models if m.label() == choice)
     config = manager.load_config()
     config.selected_model = SelectedModel(
         provider=selected.provider,
@@ -256,6 +330,34 @@ def model_menu() -> None:
     manager.save_config(config)
     console.print(f"[green]Selected model:[/green] {selected.label()}")
     questionary.press_any_key_to_continue().ask()
+
+
+def _build_model_choices(models: list[ModelInfo]) -> list["questionary.Choice"]:
+    """Groups models by provider with a separator + a stable color per
+    provider, so a long combined list (several providers, each possibly
+    with many models) stays scannable instead of one flat undifferentiated
+    list. Providers are visited in ProviderName declaration order for a
+    stable, predictable grouping across runs.
+    """
+    grouped: dict[ProviderName, list[ModelInfo]] = {}
+    for model in models:
+        grouped.setdefault(model.provider, []).append(model)
+
+    label_width = max((len(p.display_label) for p in grouped), default=0)
+    choices: list[questionary.Choice] = []
+    for provider in ProviderName:
+        provider_models = grouped.get(provider)
+        if not provider_models:
+            continue
+        color = _provider_color(provider)
+        choices.append(questionary.Separator(f"── {provider.display_label} ──"))
+        for model in provider_models:
+            title = [
+                (f"fg:{color} bold", f"{provider.display_label:<{label_width}}"),
+                ("", f"  {model.display_name}"),
+            ]
+            choices.append(questionary.Choice(title=title, value=model))
+    return choices
 
 
 async def _discover_all_models(

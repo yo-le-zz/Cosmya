@@ -62,13 +62,11 @@ class ProviderName(str, Enum):
 
     @property
     def requires_api_key(self) -> bool:
-        # Ollama and OmniRoute are both local, self-hosted gateways that
-        # work out of the box with no credential (OmniRoute: "Works the
-        # second you install it -- no keys, no config"). OmniRoute does
-        # optionally accept a bearer token for its own remote-mode auth,
-        # which the provider adapter supports if one is configured, but it
-        # is never required.
-        return self not in (ProviderName.OLLAMA, ProviderName.OMNIROUTE)
+        # Ollama is the only fully keyless provider (local daemon, no auth
+        # at all). OmniRoute is also local by default but does gate its
+        # gateway behind an API key in practice, so it's treated the same
+        # as the cloud providers here.
+        return self is not ProviderName.OLLAMA
 
 
 class SelectedModel(BaseModel):
