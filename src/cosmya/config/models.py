@@ -78,13 +78,16 @@ class SelectedModel(BaseModel):
 
 
 class Preferences(BaseModel):
-    """User-provided free-text instructions injected into audit prompts.
+    """User-provided free-text instructions injected into audit prompts,
+    plus general Cosmya behavior preferences.
 
-    This content is treated as inert prompt *data*, never as instructions
-    that can alter Cosmya's own system prompt or tool behavior.
+    ``custom_instructions`` content is treated as inert prompt *data*,
+    never as instructions that can alter Cosmya's own system prompt or
+    tool behavior.
     """
 
     custom_instructions: str = ""
+    free_models_only: bool = False
 
 
 class AppConfig(BaseModel):

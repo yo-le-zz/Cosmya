@@ -30,10 +30,56 @@ import httpx
 from cosmya.ai.errors import AuthenticationError, InvalidResponseError
 from cosmya.ai.models import ChatMessage, CompletionResult, ModelInfo, ToolCall, ToolDefinition
 from cosmya.ai.openai import to_openai_message, to_openai_tool
-from cosmya.ai.provider import AIProvider, redact
+from cosmya.ai.provider import AIProvider, describe_response, redact
 from cosmya.config.models import ProviderName
 
 _TIMEOUT = httpx.Timeout(120.0, connect=10.0)
+
+
+def _looks_free(entry: dict) -> bool:
+    """Best-effort free-tier detection for one catalog entry from any
+    OpenAI-compatible provider's ``/models`` response.
+
+    The bare OpenAI model-list schema carries no pricing field at all, so
+    this only works for providers/entries that voluntarily expose one of
+    the following signals (checked in order): an explicit ``free``/
+    ``is_free`` boolean; a ``pricing`` object (an extension several
+    OpenAI-compatible gateways -- notably OpenRouter, and OmniRoute for
+    OpenRouter-sourced entries -- add) where every present cost field is
+    zero; or OpenRouter's own ``:free`` id suffix convention. An entry
+    exposing none of these signals is treated as *not confirmed free*,
+    never as *assumed free* -- most providers here (Groq, Mistral,
+    DeepSeek, xAI, Together AI, Fireworks AI, Cerebras) don't expose
+    pricing via this endpoint at all, so their models will consistently
+    read as not-confirmed-free, which is the honest answer, not a defect.
+    """
+    for key in ("free", "is_free", "isFree"):
+        value = entry.get(key)
+        if isinstance(value, bool):
+            return value
+
+    pricing = entry.get("pricing")
+    if isinstance(pricing, dict):
+        cost_fields = [
+            pricing[k]
+            for k in ("prompt", "completion", "input", "output", "request", "image")
+            if k in pricing
+        ]
+        if cost_fields:
+            return all(_is_zero_cost(v) for v in cost_fields)
+
+    model_id = entry.get("id", "")
+    if isinstance(model_id, str) and model_id.endswith(":free"):
+        return True
+
+    return False
+
+
+def _is_zero_cost(value: object) -> bool:
+    try:
+        return float(value) == 0.0  # type: ignore[arg-type]
+    except (TypeError, ValueError):
+        return False
 
 
 class OpenAICompatibleProvider(AIProvider):
@@ -62,7 +108,8 @@ class OpenAICompatibleProvider(AIProvider):
                 payload = response.json()
             except json.JSONDecodeError as exc:
                 raise InvalidResponseError(
-                    f"{self.name.display_label} returned a non-JSON model list."
+                    f"{self.name.display_label} returned a non-JSON model list "
+                    f"({describe_response(response)})."
                 ) from exc
 
         models = [
@@ -70,7 +117,7 @@ class OpenAICompatibleProvider(AIProvider):
                 id=item["id"],
                 display_name=item.get("name", item["id"]),
                 provider=self.name,
-                metadata={"owned_by": item.get("owned_by", "")},
+                metadata={"owned_by": item.get("owned_by", ""), "free": _looks_free(item)},
             )
             for item in payload.get("data", [])
             if "id" in item
@@ -102,7 +149,10 @@ class OpenAICompatibleProvider(AIProvider):
                 payload = response.json()
             except json.JSONDecodeError as exc:
                 raise InvalidResponseError(
-                    redact(f"{self.name.display_label} returned a non-JSON completion response.")
+                    redact(
+                        f"{self.name.display_label} returned a non-JSON completion "
+                        f"response ({describe_response(response)})."
+                    )
                 ) from exc
 
         try:
@@ -247,7 +297,7 @@ class OmniRouteProvider(OpenAICompatibleProvider):
                 payload = response.json()
             except json.JSONDecodeError as exc:
                 raise InvalidResponseError(
-                    "OmniRoute returned a non-JSON model list."
+                    f"OmniRoute returned a non-JSON model list ({describe_response(response)})."
                 ) from exc
 
         models: list[ModelInfo] = []
@@ -267,35 +317,3 @@ class OmniRouteProvider(OpenAICompatibleProvider):
                 )
             )
         return models
-
-
-def _looks_free(entry: dict) -> bool:
-    """Best-effort free-tier detection for one OmniRoute catalog entry.
-    See :meth:`OmniRouteProvider.list_catalog_models` for the caveats."""
-    for key in ("free", "is_free", "isFree"):
-        value = entry.get(key)
-        if isinstance(value, bool):
-            return value
-
-    pricing = entry.get("pricing")
-    if isinstance(pricing, dict):
-        cost_fields = [
-            pricing[k]
-            for k in ("prompt", "completion", "input", "output", "request", "image")
-            if k in pricing
-        ]
-        if cost_fields:
-            return all(_is_zero_cost(v) for v in cost_fields)
-
-    model_id = entry.get("id", "")
-    if isinstance(model_id, str) and model_id.endswith(":free"):
-        return True
-
-    return False
-
-
-def _is_zero_cost(value: object) -> bool:
-    try:
-        return float(value) == 0.0  # type: ignore[arg-type]
-    except (TypeError, ValueError):
-        return False

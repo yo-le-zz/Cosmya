@@ -112,9 +112,23 @@ class GeminiProvider(AIProvider):
                 text_parts.append(part["text"])
             elif "functionCall" in part:
                 fc = part["functionCall"]
+                # Gemini's "thinking" models attach a `thoughtSignature` to
+                # the part containing a function call. It MUST be echoed
+                # back verbatim on any later request that replays this
+                # function call as conversation history, or the API
+                # rejects the request with "Function call is missing a
+                # thought_signature" (400 INVALID_ARGUMENT) -- this broke
+                # every multi-turn tool call before being captured here.
+                # See https://ai.google.dev/gemini-api/docs/thought-signatures
+                metadata = {}
+                if "thoughtSignature" in part:
+                    metadata["thought_signature"] = part["thoughtSignature"]
                 tool_calls.append(
                     ToolCall(
-                        id=f"call_{i}", name=fc["name"], arguments=fc.get("args", {})
+                        id=f"call_{i}",
+                        name=fc["name"],
+                        arguments=fc.get("args", {}),
+                        metadata=metadata,
                     )
                 )
 
@@ -154,6 +168,10 @@ def _split_system_and_contents(messages: list[ChatMessage]) -> tuple[str, list[d
         if message.content:
             parts.append({"text": message.content})
         for tc in message.tool_calls:
-            parts.append({"functionCall": {"name": tc.name, "args": tc.arguments}})
+            part: dict = {"functionCall": {"name": tc.name, "args": tc.arguments}}
+            thought_signature = tc.metadata.get("thought_signature")
+            if thought_signature is not None:
+                part["thoughtSignature"] = thought_signature
+            parts.append(part)
         contents.append({"role": role, "parts": parts or [{"text": ""}]})
     return "\n\n".join(system_parts), contents

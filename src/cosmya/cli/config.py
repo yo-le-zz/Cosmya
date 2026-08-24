@@ -37,9 +37,20 @@ from cosmya.ai.openai_compatible import OMNIROUTE_AUTO_MODEL_LABELS
 from cosmya.ai.registry import create_provider
 from cosmya.config import manager, vault
 from cosmya.config.encryption import WrongPasswordError
-from cosmya.config.models import Preferences, ProviderName, SelectedModel
+from cosmya.config.models import ProviderName, SelectedModel
 
 console = Console()
+
+# questionary.Choice(value=None) silently falls back to using the choice's
+# *title* string as its resolved value -- None is not treated as "no
+# selection", it's treated as "no value was set, use the title instead".
+# A "Back" choice built with value=None therefore returns the string
+# "Back" from .ask(), not None, which crashed configure_provider(provider)
+# with `'str' object has no attribute 'display_label'` the moment anyone
+# picked Back. This sentinel is guaranteed never equal to any real
+# ProviderName/ModelInfo, so it can be checked for unambiguously alongside
+# genuine None (Ctrl+C / cancelled prompt).
+_BACK = object()
 
 # A stable color per provider (indexed by declaration order in
 # ProviderName), used to visually group a long model list by which
@@ -148,7 +159,7 @@ def providers_menu() -> None:
         console.print(table)
 
         choices = [_provider_choice(p, configured) for p in providers]
-        choices.append(questionary.Choice(title=[("fg:ansired", "Back")], value=None))
+        choices.append(questionary.Choice(title=[("fg:ansired", "Back")], value=_BACK))
         provider = questionary.select(
             "Select a provider to configure (type to search):",
             choices=choices,
@@ -156,7 +167,7 @@ def providers_menu() -> None:
             use_jk_keys=False,
         ).ask()
 
-        if provider is None:
+        if provider is None or provider is _BACK:
             clear_screen()
             return
 
@@ -304,24 +315,40 @@ def model_menu() -> None:
         models = asyncio.run(_discover_all_models(list(all_configured), vault_password))
 
     if ProviderName.OMNIROUTE in all_configured:
-        models = _maybe_extend_with_omniroute_catalog(models, vault_password)
+        models = _maybe_extend_with_omniroute_catalog(
+            models, vault_password, free_only=config.preferences.free_models_only
+        )
+
+    if config.preferences.free_models_only:
+        console.print(
+            "[cyan]Filtering to free models only (change this in "
+            "Preferences).[/cyan]"
+        )
+        models = [m for m in models if m.metadata.get("free") is True]
 
     if not models:
-        console.print(
-            "[yellow]No models could be discovered from any configured provider.[/yellow]"
-        )
+        if config.preferences.free_models_only:
+            console.print(
+                "[yellow]No confirmed-free models found among configured "
+                "providers. Turn off 'free models only' in Preferences to "
+                "see everything.[/yellow]"
+            )
+        else:
+            console.print(
+                "[yellow]No models could be discovered from any configured provider.[/yellow]"
+            )
         questionary.press_any_key_to_continue().ask()
         return
 
     choices = _build_model_choices(models)
-    choices.append(questionary.Choice(title=[("fg:ansired", "Back")], value=None))
+    choices.append(questionary.Choice(title=[("fg:ansired", "Back")], value=_BACK))
     selected = questionary.select(
         "Select a model (type to search):",
         choices=choices,
         use_search_filter=True,
         use_jk_keys=False,
     ).ask()
-    if selected is None:
+    if selected is None or selected is _BACK:
         return
 
     config = manager.load_config()
@@ -336,15 +363,15 @@ def model_menu() -> None:
 
 
 def _maybe_extend_with_omniroute_catalog(
-    models: list[ModelInfo], vault_password: str | None
+    models: list[ModelInfo], vault_password: str | None, *, free_only: bool
 ) -> list[ModelInfo]:
     """Offers to add OmniRoute's real upstream catalog to the model list,
     on top of the curated `auto` aliases already in `models` -- so picking
     a specific provider/model through OmniRoute is possible, not just
     `auto`. Declined by default (a fast Enter keeps the previous
-    behavior); when accepted, defaults to free-only, since the unfiltered
-    catalog is 1000+ models regardless of which upstream provider they
-    come from.
+    behavior). Whether the fetched catalog is restricted to free models is
+    driven by the persisted "free models only" preference (see
+    preferences_menu()), not asked here every time.
     """
     browse = questionary.confirm(
         "OmniRoute can also route to one specific provider/model instead of "
@@ -353,13 +380,6 @@ def _maybe_extend_with_omniroute_catalog(
     ).ask()
     if not browse:
         return models
-
-    free_only = questionary.confirm(
-        "Show only free models? (OmniRoute's full catalog is 1000+ models "
-        "across all its providers; free-model detection is best-effort -- "
-        "see the README for details)",
-        default=True,
-    ).ask()
 
     api_key: str | None = None
     if vault_password:
@@ -376,7 +396,7 @@ def _maybe_extend_with_omniroute_catalog(
     with console.status("Fetching OmniRoute's catalog..."):
         try:
             catalog_models = asyncio.run(
-                omniroute.list_catalog_models(free_only=bool(free_only))
+                omniroute.list_catalog_models(free_only=free_only)
             )
         except ProviderError as exc:
             console.print(f"[yellow]OmniRoute catalog: {exc}[/yellow]")
@@ -447,18 +467,36 @@ def preferences_menu() -> None:
     clear_screen()
     config = manager.load_config()
     console.print(Panel("Preferences", style="bold"))
+
     console.print("Custom instructions given to the AI for every audit.")
     if config.preferences.custom_instructions:
         console.print(
             Panel(config.preferences.custom_instructions, title="Current preferences")
         )
-
     text = questionary.text(
         "Enter your custom instructions (leave blank to keep current):",
         multiline=True,
     ).ask()
+
+    console.print()
+    console.print(
+        "'Free models only' applies across every provider whenever you open "
+        "Model: only models Cosmya can confirm are free are shown. Detection "
+        "is best-effort (most providers don't expose pricing at all, so "
+        "their models won't show up while this is on)."
+    )
+    free_models_only = questionary.confirm(
+        "Show only free models in the Model menu?",
+        default=config.preferences.free_models_only,
+    ).ask()
+
+    # Update in place rather than replacing config.preferences wholesale --
+    # that used to silently wipe out any preference field not being edited
+    # in this pass.
     if text:
-        config.preferences = Preferences(custom_instructions=text.strip())
-        manager.save_config(config)
-        console.print("[green]Preferences saved.[/green]")
+        config.preferences.custom_instructions = text.strip()
+    if free_models_only is not None:
+        config.preferences.free_models_only = free_models_only
+    manager.save_config(config)
+    console.print("[green]Preferences saved.[/green]")
     questionary.press_any_key_to_continue().ask()

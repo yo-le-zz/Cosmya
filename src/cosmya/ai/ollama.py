@@ -58,7 +58,11 @@ class OllamaProvider(AIProvider):
                 id=item["name"],
                 display_name=item["name"],
                 provider=self.name,
-                metadata={"size": item.get("size", 0)},
+                # Ollama runs locally against your own hardware -- there
+                # is no per-token API cost, so every model it reports is
+                # unambiguously free (unlike the best-effort heuristic
+                # used for cloud providers where pricing isn't exposed).
+                metadata={"size": item.get("size", 0), "free": True},
             )
             for item in payload.get("models", [])
         ]

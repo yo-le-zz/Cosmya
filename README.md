@@ -161,7 +161,7 @@ cosmya audit <path>        # run a read-only audit of a project directory
 cosmya config
 ├── 1. Providers     -> configure any of Cosmya's 13 providers
 ├── 2. Model         -> discover and select a model from configured providers
-├── 3. Preferences   -> custom instructions injected into every audit
+├── 3. Preferences   -> custom instructions + "free models only" toggle
 └── 0. Exit
 ```
 
@@ -175,23 +175,28 @@ Configuring a provider walks you through: entering an API key (masked, never
 printed), setting or entering your credential protection password, encrypting
 and storing the key, testing connectivity, and discovering available models.
 
-OmniRoute is a special case: since its own catalog can list 1000+ upstream
-models, Cosmya only ever offers OmniRoute's own `auto` routing aliases
-(`auto`, `auto/coding`, `auto/fast`, `auto/cheap`, `auto/offline`,
-`auto/smart`) by default rather than the full list. Successfully configuring
-OmniRoute also immediately sets it as your active model (`auto`), so audits
-route through it by default -- you can still pick something else afterwards
-from Model.
+**Free models only**: Preferences has a persistent "free models only" toggle
+that applies to the Model menu across *every* configured provider, not just
+one. Free-model detection is best-effort and provider-dependent: it looks for
+whichever of an explicit free/is_free flag, a zero-cost `pricing` object, or
+OpenRouter's `:free` id suffix a provider's model list actually exposes.
+OpenRouter and OmniRoute both expose enough signal for this to work well;
+Ollama models are always treated as free (a local daemon has no per-token
+API cost); most other providers (OpenAI, Claude, Groq, Mistral, DeepSeek,
+xAI, Together AI, Fireworks AI, Cerebras) don't expose pricing via their
+model-list endpoint at all, so their models simply won't appear while the
+toggle is on -- that's an honest "can't confirm," not a bug.
 
-If you'd rather pick a specific upstream provider/model through OmniRoute
-instead of an `auto` alias, the Model menu offers to browse OmniRoute's real
-catalog when OmniRoute is configured, with an option to show only free
-models. Free-model detection is best-effort (OmniRoute's public model list
-doesn't guarantee a pricing field), based on whichever of an explicit
-free/is_free flag, a zero-cost `pricing` object, or OpenRouter's `:free` id
-suffix convention the entry actually provides -- OmniRoute's own
-`/dashboard/free-tiers` page is the authoritative source if something looks
-misclassified.
+OmniRoute is a special case beyond the free-models toggle: since its own
+catalog can list 1000+ upstream models, Cosmya only ever offers OmniRoute's
+own `auto` routing aliases (`auto`, `auto/coding`, `auto/fast`, `auto/cheap`,
+`auto/offline`, `auto/smart`) by default rather than the full list.
+Successfully configuring OmniRoute also immediately sets it as your active
+model (`auto`), so audits route through it by default -- you can still pick
+something else afterwards from Model. If you'd rather pick a specific
+upstream provider/model through OmniRoute instead of an `auto` alias, the
+Model menu offers to browse OmniRoute's real catalog when OmniRoute is
+configured (filtered by the same persisted "free models only" preference).
 
 ### Running an audit
 

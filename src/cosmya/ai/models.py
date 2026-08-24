@@ -28,6 +28,13 @@ class ToolCall(BaseModel):
     id: str
     name: str
     arguments: dict[str, Any]
+    # Provider-specific extras that must be preserved and echoed back
+    # verbatim in a later request for that provider's API to keep working
+    # correctly across multi-turn tool calling. Currently used by Gemini
+    # for `thoughtSignature` (see ai/gemini.py) -- Gemini's API rejects a
+    # later request that's missing it on a replayed functionCall part.
+    # Every other provider ignores this field entirely.
+    metadata: dict[str, Any] = Field(default_factory=dict)
 
 
 class ToolResultMessage(BaseModel):

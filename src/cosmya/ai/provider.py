@@ -41,6 +41,19 @@ def redact(text: str) -> str:
     return _SECRET_PATTERN.sub("[REDACTED]", text)
 
 
+def describe_response(response: httpx.Response, *, snippet_len: int = 300) -> str:
+    """A short, redacted, human-useful description of an HTTP response for
+    error messages -- status code plus a truncated body snippet -- so a
+    failure like "non-JSON response" says *what actually came back*
+    (an HTML error page, a truncated stream, a proxy error, etc.) instead
+    of leaving the person guessing.
+    """
+    body = redact(response.text[:snippet_len])
+    if len(response.text) > snippet_len:
+        body += "..."
+    return f"HTTP {response.status_code}, body: {body!r}"
+
+
 class AIProvider(abc.ABC):
     """Base class every provider adapter must implement."""
 

@@ -118,7 +118,7 @@ def test_maybe_extend_declines_by_default_returns_original_models(monkeypatch):
         config_module.questionary, "confirm", lambda *a, **k: _FakeQuestion(False)
     )
     models = _sample_models()
-    result = config_module._maybe_extend_with_omniroute_catalog(models, "pw")
+    result = config_module._maybe_extend_with_omniroute_catalog(models, "pw", free_only=False)
     assert result == models
 
 
@@ -126,8 +126,9 @@ def test_maybe_extend_appends_free_catalog_models(monkeypatch):
     import cosmya.cli.config as config_module
     from cosmya.config.models import ProviderName as PN
 
-    answers = iter([_FakeQuestion(True), _FakeQuestion(True)])  # browse=True, free_only=True
-    monkeypatch.setattr(config_module.questionary, "confirm", lambda *a, **k: next(answers))
+    monkeypatch.setattr(
+        config_module.questionary, "confirm", lambda *a, **k: _FakeQuestion(True)  # browse=True
+    )
     monkeypatch.setattr(config_module.vault, "get_api_key", lambda provider, password: "fake-key")
 
     captured_free_only = {}
@@ -146,7 +147,7 @@ def test_maybe_extend_appends_free_catalog_models(monkeypatch):
     monkeypatch.setattr(config_module, "create_provider", lambda name, key: FakeOmniRoute())
 
     models = _sample_models()
-    result = config_module._maybe_extend_with_omniroute_catalog(models, "pw")
+    result = config_module._maybe_extend_with_omniroute_catalog(models, "pw", free_only=True)
 
     assert captured_free_only["value"] is True
     ids = [m.id for m in result]
@@ -171,8 +172,11 @@ def test_maybe_extend_confirm_calls_are_constructible(monkeypatch):
     monkeypatch.setattr(config_module.questionary, "confirm", confirm_but_stub_ask)
 
     models = _sample_models()
-    result = config_module._maybe_extend_with_omniroute_catalog(models, "pw")
+    result = config_module._maybe_extend_with_omniroute_catalog(models, "pw", free_only=False)
     assert result == models
+
+
+def test_maybe_extend_deduplicates_models_already_present(monkeypatch):
     """If the catalog happens to include a model id already covered by the
     curated auto aliases, it must not be added twice."""
     import cosmya.cli.config as config_module
@@ -192,7 +196,7 @@ def test_maybe_extend_confirm_calls_are_constructible(monkeypatch):
     monkeypatch.setattr(config_module, "create_provider", lambda name, key: FakeOmniRoute())
     monkeypatch.setattr(config_module.vault, "get_api_key", lambda provider, password: "fake-key")
 
-    result = config_module._maybe_extend_with_omniroute_catalog(models, "pw")
+    result = config_module._maybe_extend_with_omniroute_catalog(models, "pw", free_only=False)
 
     ids = [m.id for m in result]
     assert ids.count("auto") == 1
